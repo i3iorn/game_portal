@@ -24,7 +24,7 @@ class MemoryActivity : Activity() {
         game = MemoryGame()
         val root = Ui.gameRoot(this)
         status = Ui.status(this, "Find all pairs!")
-        root.addView(status)
+        Ui.addCentered(root, status)
         cells = Array(game.faces.size) { Button(this) }
         val grid = GridLayout(this).apply {
             columnCount = 4

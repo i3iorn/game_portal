@@ -82,7 +82,7 @@ class SlidingPuzzleActivity : Activity() {
         val cell = (GRID_MAX_PX / size).coerceAtLeast(56)
         val root = Ui.gameRoot(this)
         status = Ui.status(this)
-        root.addView(status)
+        Ui.addCentered(root, status)
         cells = Array(size * size) { Button(this) }
         val grid = GridLayout(this).apply {
             columnCount = size
@@ -99,7 +99,7 @@ class SlidingPuzzleActivity : Activity() {
             }
         }
         Ui.addCentered(root, grid)
-        root.addView(Ui.button(this, "New game") {
+        Ui.addCentered(root, Ui.button(this, "New game") {
             game.newGame()
             elapsedBaseMs = 0L
             solvedElapsedMs = -1L

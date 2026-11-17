@@ -46,7 +46,7 @@ class LightsOutActivity : Activity() {
         val cell = (GRID_MAX_PX / size).coerceIn(56, 165)
         val root = Ui.gameRoot(this)
         status = Ui.status(this)
-        root.addView(status)
+        Ui.addCentered(root, status)
         cells = Array(size * size) { Button(this) }
         val grid = GridLayout(this).apply {
             columnCount = size
@@ -63,7 +63,7 @@ class LightsOutActivity : Activity() {
             }
         }
         Ui.addCentered(root, grid)
-        root.addView(Ui.button(this, "New game") {
+        Ui.addCentered(root, Ui.button(this, "New game") {
             game.newGame()
             render()
         })

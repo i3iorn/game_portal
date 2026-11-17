@@ -2,10 +2,17 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
-/** Settings screen: puzzle size, minesweeper preset, lights out size, tic-tac-toe opponent. */
+/**
+ * Settings, grouped per game: each section has a header and aligned
+ * label/value rows; tapping a row's value cycles it and rebuilds the screen.
+ */
 class SettingsActivity : Activity() {
 
     private lateinit var settings: GameSettings
@@ -21,24 +28,55 @@ class SettingsActivity : Activity() {
 
     private fun build(): LinearLayout {
         val root = Ui.gameRoot(this)
-        root.addView(Ui.status(this, "Settings — tap an option to change it"))
-        root.addView(Ui.button(this, "15 Puzzle: ${settings.puzzleSize}x${settings.puzzleSize}") {
+        root.addView(Ui.status(this, "Settings"))
+
+        root.addView(Ui.header(this, "15 PUZZLE"))
+        root.addView(optionRow("Board size", "${settings.puzzleSize}x${settings.puzzleSize}") {
             settings.puzzleSize = nextSize(GameSettings.PUZZLE_SIZES, settings.puzzleSize)
-            setContentView(build())
         })
-        root.addView(Ui.button(this, "Minesweeper: ${GameSettings.MINESWEEPER_PRESETS[settings.minesweeperPreset]}") {
+
+        root.addView(Ui.header(this, "MINESWEEPER"))
+        root.addView(optionRow("Field", GameSettings.MINESWEEPER_PRESETS[settings.minesweeperPreset]) {
             settings.minesweeperPreset = (settings.minesweeperPreset + 1) % GameSettings.MINESWEEPER_PRESETS.size
-            setContentView(build())
         })
-        root.addView(Ui.button(this, "Lights Out: ${settings.lightsOutSize}x${settings.lightsOutSize}") {
+
+        root.addView(Ui.header(this, "LIGHTS OUT"))
+        root.addView(optionRow("Board size", "${settings.lightsOutSize}x${settings.lightsOutSize}") {
             settings.lightsOutSize = nextSize(GameSettings.LIGHTS_OUT_SIZES, settings.lightsOutSize)
-            setContentView(build())
         })
-        root.addView(Ui.button(this, "Tic-Tac-Toe opponent: ${GameSettings.TTT_OPPONENTS[settings.ticTacToeOpponent]}") {
+
+        root.addView(Ui.header(this, "TIC-TAC-TOE"))
+        root.addView(optionRow("Default opponent", GameSettings.TTT_OPPONENTS[settings.ticTacToeOpponent]) {
             settings.ticTacToeOpponent = (settings.ticTacToeOpponent + 1) % GameSettings.TTT_OPPONENTS.size
-            setContentView(build())
         })
-        root.addView(Ui.button(this, "Back") { finish() })
+
+        Ui.addCentered(root, Ui.button(this, "Back") { finish() })
         return root
+    }
+
+    /** One settings row: caption on the left, cycling value button on the right. */
+    private fun optionRow(label: String, value: String, cycle: () -> Unit): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(32, 4, 32, 4)
+        }
+        row.addView(
+            TextView(this).apply {
+                text = label
+                textSize = 16f
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            },
+        )
+        row.addView(
+            Button(this).apply {
+                text = value
+                setOnClickListener {
+                    cycle()
+                    setContentView(build())
+                }
+            },
+        )
+        return row
     }
 }

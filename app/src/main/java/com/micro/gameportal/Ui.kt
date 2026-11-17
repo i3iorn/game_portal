@@ -41,6 +41,13 @@ object Ui {
         text = initial
     }
 
+    /** Small section caption used to group rows on list screens (e.g. Settings). */
+    fun header(activity: Activity, caption: String): TextView = TextView(activity).apply {
+        text = caption
+        textSize = 14f
+        setPadding(32, 40, 32, 8)
+    }
+
     fun button(activity: Activity, label: String, onClick: () -> Unit): Button = Button(activity).apply {
         text = label
         setOnClickListener { onClick() }

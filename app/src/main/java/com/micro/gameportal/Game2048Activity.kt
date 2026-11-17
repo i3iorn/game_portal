@@ -31,9 +31,9 @@ class Game2048Activity : Activity() {
         status = Ui.status(this)
         val grid = buildGrid()
         grid.setOnTouchListener(SwipeListener { direction -> onSwipe(direction) })
-        root.addView(status)
+        Ui.addCentered(root, status)
         Ui.addCentered(root, grid)
-        root.addView(Ui.button(this, "New game") {
+        Ui.addCentered(root, Ui.button(this, "New game") {
             game.newGame()
             render()
         })

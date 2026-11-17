@@ -93,7 +93,7 @@ class MinefieldActivity : Activity() {
         val cell = (GRID_MAX_PX / cols).coerceIn(56, 90)
         val root = Ui.gameRoot(this)
         status = Ui.status(this)
-        root.addView(status)
+        Ui.addCentered(root, status)
         cells = Array(rows * cols) { Button(this) }
         val grid = GridLayout(this).apply {
             columnCount = cols
@@ -112,7 +112,7 @@ class MinefieldActivity : Activity() {
             }
         }
         Ui.addCentered(root, grid)
-        root.addView(Ui.button(this, "New game") {
+        Ui.addCentered(root, Ui.button(this, "New game") {
             field = Minefield(rows = rows, cols = cols, mineCount = presetFields(preset).third)
             elapsedBaseMs = 0L
             render()

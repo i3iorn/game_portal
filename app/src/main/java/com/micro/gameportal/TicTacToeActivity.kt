@@ -32,11 +32,11 @@ class TicTacToeActivity : Activity() {
         status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
         board = TicTacToeBoardView(this)
         board.onCellTapped = ::onCellTapped
-        root.addView(status)
+        Ui.addCentered(root, status)
         Ui.addCentered(root, board)
         opponentButton = Ui.button(this, "") { cycleOpponent() }
-        root.addView(opponentButton)
-        root.addView(Ui.button(this, "New game") {
+        Ui.addCentered(root, opponentButton)
+        Ui.addCentered(root, Ui.button(this, "New game") {
             game.reset()
             board.game = game
             render()
