@@ -40,7 +40,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (signingProps != null) {
                 signingConfig = signingConfigs.getByName("release")
@@ -52,4 +53,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
 }
