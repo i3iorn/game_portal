@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 // CI passes -PappVersionName / -PappVersionCode derived from the pushed tag.
@@ -18,6 +19,9 @@ val signingProps = if (signingPropsFile.exists()) Properties().apply {
 
 android {
     namespace = "com.micro.gameportal"
+    buildFeatures {
+        compose = true
+    }
     compileSdk = 36
 
     defaultConfig {
@@ -63,5 +67,9 @@ android {
 
 dependencies {
     implementation("com.google.android.material:material:1.12.0")
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.activity:activity-compose:1.9.3")
     testImplementation("junit:junit:4.13.2")
 }

@@ -1,87 +1,181 @@
 package com.micro.gameportal
 
-import android.app.Activity
 import android.os.Bundle
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
-/**
- * Settings, grouped per game: each section has a header and aligned
- * label/value rows; tapping a row's value cycles it and rebuilds the screen.
- */
-class SettingsActivity : Activity() {
-
-    private lateinit var settings: GameSettings
+/** Settings, rebuilt in Compose (12 migration reference screen). */
+class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        settings = GameSettings(this)
-        setContentView(build())
+        Ui.setupEnter(this)
+        val settings = GameSettings(this)
+        setContent {
+            MaterialTheme(
+                colorScheme = paletteColorScheme(Palette.byIndex(settings.colorTheme)),
+            ) {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    SettingsContent(settings) { finish() }
+                }
+            }
+        }
     }
 
     private fun nextSize(options: List<Int>, current: Int): Int =
         options[(options.indexOf(current).coerceAtLeast(0) + 1) % options.size]
+}
 
-    private fun build(): LinearLayout {
-        val root = Ui.gameRoot(this)
-        root.addView(Ui.status(this, "Settings"))
+@Composable
+private fun SettingsContent(settings: GameSettings, onFinish: () -> Unit) {
+    var colorTheme by remember { mutableIntStateOf(settings.colorTheme) }
+    var puzzleSize by remember { mutableIntStateOf(settings.puzzleSize) }
+    var minesweeperPreset by remember { mutableIntStateOf(settings.minesweeperPreset) }
+    var lightsOutSize by remember { mutableIntStateOf(settings.lightsOutSize) }
+    var opponent by remember { mutableIntStateOf(settings.ticTacToeOpponent) }
+    var feedback by remember { mutableStateOf(settings.feedbackEnabled) }
 
-        root.addView(Ui.header(this, "15 PUZZLE"))
-        root.addView(optionRow("Board size", "${settings.puzzleSize}x${settings.puzzleSize}") {
-            settings.puzzleSize = nextSize(GameSettings.PUZZLE_SIZES, settings.puzzleSize)
-        })
+    val palette = Palette.byIndex(colorTheme)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(palette.background))
+            .statusBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+    ) {
+        Text(
+            "Settings",
+            style = MaterialTheme.typography.titleLarge,
+            color = Color(palette.text),
+            modifier = Modifier.padding(vertical = 16.dp),
+        )
 
-        root.addView(Ui.header(this, "MINESWEEPER"))
-        root.addView(optionRow("Field", GameSettings.MINESWEEPER_PRESETS[settings.minesweeperPreset]) {
-            settings.minesweeperPreset = (settings.minesweeperPreset + 1) % GameSettings.MINESWEEPER_PRESETS.size
-        })
-
-        root.addView(Ui.header(this, "LIGHTS OUT"))
-        root.addView(optionRow("Board size", "${settings.lightsOutSize}x${settings.lightsOutSize}") {
-            settings.lightsOutSize = nextSize(GameSettings.LIGHTS_OUT_SIZES, settings.lightsOutSize)
-        })
-
-        root.addView(Ui.header(this, "TIC-TAC-TOE"))
-        root.addView(optionRow("Default opponent", GameSettings.TTT_OPPONENTS[settings.ticTacToeOpponent]) {
-            settings.ticTacToeOpponent = (settings.ticTacToeOpponent + 1) % GameSettings.TTT_OPPONENTS.size
-        })
-
-        root.addView(Ui.header(this, "GENERAL"))
-        root.addView(optionRow("Color theme", Palette.byIndex(settings.colorTheme).name) {
-            settings.colorTheme = (settings.colorTheme + 1) % Palette.PRESETS.size
-        })
-        root.addView(optionRow("Sound & vibration", if (settings.feedbackEnabled) "On" else "Off") {
-            settings.feedbackEnabled = !settings.feedbackEnabled
-        })
-
-        Ui.addCentered(root, Ui.button(this, "Back", size = Ui.ButtonSize.COMPACT, quiet = true) { finish() })
-        return root
-    }
-
-    /** One settings row: caption on the left, cycling value button on the right. */
-    private fun optionRow(label: String, value: String, cycle: () -> Unit): View {
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(32, 4, 32, 4)
+        SectionHeader("15 PUZZLE", palette.textDim)
+        OptionRow("Board size", "${puzzleSize}x${puzzleSize}", palette) {
+            puzzleSize = settings.let { nextSize(GameSettings.PUZZLE_SIZES, puzzleSize) }
+            settings.puzzleSize = puzzleSize
         }
-        row.addView(
-            TextView(this).apply {
-                text = label
-                textSize = 16f
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            },
-        )
-        row.addView(
-            Ui.button(this, value, size = Ui.ButtonSize.COMPACT, quiet = true) {
-                cycle()
-                setContentView(build())
-            },
-        )
-        return row
+
+        SectionHeader("MINESWEEPER", palette.textDim)
+        OptionRow("Field", GameSettings.MINESWEEPER_PRESETS[minesweeperPreset], palette) {
+            minesweeperPreset = (minesweeperPreset + 1) % GameSettings.MINESWEEPER_PRESETS.size
+            settings.minesweeperPreset = minesweeperPreset
+        }
+
+        SectionHeader("LIGHTS OUT", palette.textDim)
+        OptionRow("Board size", "${lightsOutSize}x${lightsOutSize}", palette) {
+            lightsOutSize = settings.let { nextSize(GameSettings.LIGHTS_OUT_SIZES, lightsOutSize) }
+            settings.lightsOutSize = lightsOutSize
+        }
+
+        SectionHeader("TIC-TAC-TOE", palette.textDim)
+        OptionRow("Default opponent", GameSettings.TTT_OPPONENTS[opponent], palette) {
+            opponent = (opponent + 1) % GameSettings.TTT_OPPONENTS.size
+            settings.ticTacToeOpponent = opponent
+        }
+
+        SectionHeader("GENERAL", palette.textDim)
+        OptionRow("Color theme", Palette.byIndex(colorTheme).name, palette) {
+            colorTheme = (colorTheme + 1) % Palette.PRESETS.size
+            settings.colorTheme = colorTheme
+        }
+        OptionRow("Sound & vibration", if (feedback) "On" else "Off", palette) {
+            feedback = !feedback
+            settings.feedbackEnabled = feedback
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Button(onClick = onFinish) {
+                Text("Back")
+            }
+        }
     }
 }
+
+private fun nextSize(options: List<Int>, current: Int): Int =
+    options[(options.indexOf(current).coerceAtLeast(0) + 1) % options.size]
+
+@Composable
+private fun SectionHeader(text: String, color: Int) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = Color(color),
+        letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified,
+        modifier = Modifier.padding(top = 20.dp, bottom = 4.dp),
+    )
+}
+
+@Composable
+private fun OptionRow(label: String, value: String, palette: Palette, onCycle: () -> Unit) {  // values are ARGB ints from Palette
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(palette.text),
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(palette.textDim),
+            modifier = Modifier
+                .background(
+                    Color(palette.surfaceDim),
+                    RoundedCornerShape(10.dp),
+                )
+                .clickable { onCycle() }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+    }
+}
+
+/** Maps a [Palette] to a Material 3 color scheme so Compose follows the theme picker. */
+private fun paletteColorScheme(palette: Palette) = androidx.compose.material3.darkColorScheme(
+    primary = Color(palette.primary),
+    onPrimary = Color(palette.background),
+    surface = Color(palette.background),
+    onSurface = Color(palette.text),
+    surfaceVariant = Color(palette.surfaceDim),
+    onSurfaceVariant = Color(palette.textDim),
+    secondary = Color(palette.accent),
+    onSecondary = Color(palette.background),
+)
