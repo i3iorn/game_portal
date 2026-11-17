@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark theme matching the game tile palette (browns + warm accent). -->
-    <style name="Theme.GamePortal" parent="android:Theme.Material.NoActionBar">
+    <!-- Material 3 dark theme; color roles mirror the default Dark Brown palette. -->
+    <style name="Theme.GamePortal" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#8A7A5E</item>
+        <item name="colorOnPrimary">#2E2118</item>
+        <item name="colorPrimaryContainer">#3A2F22</item>
+        <item name="colorOnPrimaryContainer">#EDE4D3</item>
+        <item name="colorSurface">#2E2118</item>
+        <item name="colorOnSurface">#EDE4D3</item>
+        <item name="colorOnSurfaceVariant">#B9AB93</item>
+        <item name="colorSecondary">#FFD54F</item>
+        <item name="colorOnSecondary">#2E2118</item>
         <item name="android:windowBackground">#2E2118</item>
-        <item name="android:colorPrimary">#8A7A5E</item>
-        <item name="android:colorPrimaryDark">#1E1710</item>
-        <item name="android:colorAccent">#FFD54F</item>
         <item name="android:statusBarColor">#1E1710</item>
         <item name="android:navigationBarColor">#1E1710</item>
     </style>

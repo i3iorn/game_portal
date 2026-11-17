@@ -9,9 +9,9 @@ import android.graphics.drawable.RippleDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.google.android.material.button.MaterialButton
 
 /**
  * Shared UI kit. All colors come from the active [Palette] (user-selectable
@@ -180,7 +180,7 @@ object Ui {
         size: ButtonSize = ButtonSize.MEDIUM,
         quiet: Boolean = false,
         onClick: () -> Unit,
-    ): Button = Button(activity).apply {
+    ): MaterialButton = MaterialButton(activity).apply {
         text = label
         textSize = 14f
         isAllCaps = true
