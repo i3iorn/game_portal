@@ -80,6 +80,60 @@ object Ui {
         root.addView(centered(view))
     }
 
+    /** Fade transition for screen switches; call in onCreate and after finish. */
+    fun setupEnter(activity: Activity) {
+        activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
+    /** Finishes the screen with the matching fade transition. */
+    fun back(activity: Activity) {
+        activity.finish()
+        activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
+    /** Slim top row: back arrow + screen title. */
+    fun topBar(activity: Activity, title: String, onBack: () -> Unit): View {
+        val palette = theme(activity)
+        val bar = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, dp(activity, 4f), 0, dp(activity, 4f))
+        }
+        bar.addView(
+            TextView(activity).apply {
+                text = "←"
+                textSize = 20f
+                setTextColor(palette.text)
+                gravity = Gravity.CENTER
+                background = rounded(activity, palette.surfaceDim, ripple = true)
+                layoutParams = LinearLayout.LayoutParams(dp(activity, 44f), dp(activity, 44f))
+                setOnClickListener { onBack() }
+            },
+        )
+        bar.addView(
+            TextView(activity).apply {
+                text = title
+                textSize = 18f
+                setTextColor(palette.text)
+                setPadding(dp(activity, 12f), 0, 0, 0)
+            },
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        return bar
+    }
+
+    /** One-time hint line; the caller hides it after the first user input. */
+    fun hint(activity: Activity, text: String): TextView = TextView(activity).apply {
+        this.text = text
+        textSize = 13f
+        setTextColor(theme(activity).textDim)
+        gravity = Gravity.CENTER
+        setPadding(0, dp(activity, 4f), 0, dp(activity, 4f))
+    }
+
     /** Big screen title. */
     fun title(activity: Activity, text: String): TextView = TextView(activity).apply {
         this.text = text
@@ -236,6 +290,26 @@ data class Palette(
                 text = 0xFFF0E6F2.toInt(),
                 textDim = 0xFFB5A4C0.toInt(),
                 accent = 0xFFF2A2C0.toInt(),
+            ),
+            Palette(
+                "Daylight",
+                background = 0xFFF4EEE2.toInt(),
+                surface = 0xFFE7DECC.toInt(),
+                surfaceDim = 0xFFDED3BE.toInt(),
+                primary = 0xFF7C6A4E.toInt(),
+                text = 0xFF2E2118.toInt(),
+                textDim = 0xFF7A6A52.toInt(),
+                accent = 0xFFD98324.toInt(),
+            ),
+            Palette(
+                "Paper",
+                background = 0xFFF2F4F6.toInt(),
+                surface = 0xFFE2E7EC.toInt(),
+                surfaceDim = 0xFFD8DEE5.toInt(),
+                primary = 0xFF52677E.toInt(),
+                text = 0xFF1C2024.toInt(),
+                textDim = 0xFF5F6B78.toInt(),
+                accent = 0xFF2C8C7D.toInt(),
             ),
         )
 

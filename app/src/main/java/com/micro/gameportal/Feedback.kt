@@ -38,10 +38,18 @@ object Feedback {
 
     fun enabled(context: Context): Boolean = GameSettings(context).feedbackEnabled
 
-    /** Short vibration on [view] (no-ops when the setting is off). */
-    fun haptic(view: View) {
+    /** Haptic strength tiers, mapped to system feedback constants. */
+    enum class HapticStrength { LIGHT, MEDIUM, STRONG }
+
+    /** Vibration on [view]; LIGHT = tick, MEDIUM = key, STRONG = long-press. */
+    fun haptic(view: View, strength: HapticStrength = HapticStrength.MEDIUM) {
         if (!enabled(view.context)) return
-        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        val constant = when (strength) {
+            HapticStrength.LIGHT -> HapticFeedbackConstants.CLOCK_TICK
+            HapticStrength.MEDIUM -> HapticFeedbackConstants.VIRTUAL_KEY
+            HapticStrength.STRONG -> HapticFeedbackConstants.LONG_PRESS
+        }
+        view.performHapticFeedback(constant)
     }
 
     fun play(context: Context, sound: Sound) {

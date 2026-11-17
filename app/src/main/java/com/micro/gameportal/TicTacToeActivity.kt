@@ -28,7 +28,9 @@ class TicTacToeActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Ui.setupEnter(this)
         val root = Ui.gameRoot(this)
+        root.addView(Ui.topBar(this, "Tic-Tac-Toe") { Ui.back(this) })
         status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
         board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.theme(this@TicTacToeActivity).surface, radiusDp = 14f, ripple = false) }
         board.onCellTapped = ::onCellTapped
@@ -90,8 +92,7 @@ class TicTacToeActivity : Activity() {
     private fun onCellTapped(index: Int) {
         if (mode != TicTacToeAi.Difficulty.HUMAN && game.current == TicTacToeGame.O) return
         if (!game.play(index)) return
-        Feedback.haptic(board)
-        if (game.winner != TicTacToeGame.EMPTY) Feedback.play(this, Feedback.Sound.SUCCESS)
+        Feedback.haptic(board, Feedback.HapticStrength.LIGHT)
         board.invalidate()
         render()
         scheduleAiMove()
@@ -110,6 +111,7 @@ class TicTacToeActivity : Activity() {
             if (game.winner != TicTacToeGame.EMPTY || game.isFull) return@Runnable
             val move = TicTacToeAi(game, mode).bestMove()
             if (move >= 0 && game.play(move)) {
+                Feedback.haptic(board, Feedback.HapticStrength.LIGHT)
                 board.invalidate()
                 render()
             }
@@ -124,6 +126,19 @@ class TicTacToeActivity : Activity() {
                 if (game.winner == TicTacToeGame.X) "X wins!" else "O wins!"
             game.isFull -> "Draw — board is full."
             else -> if (game.current == TicTacToeGame.X) "X to move" else "O to move"
+        }
+        if (game.winner != TicTacToeGame.EMPTY || game.isFull) {
+            Feedback.play(this, Feedback.Sound.SUCCESS)
+            GameStats.recordEnd(this, "ttt", won = game.winner == TicTacToeGame.X)
+            ResultOverlay.show(
+                this,
+                when {
+                    game.winner == TicTacToeGame.X -> "X wins!"
+                    game.winner == TicTacToeGame.O -> "O wins!"
+                    else -> "Draw"
+                },
+                "Tap New game below for a rematch",
+            ) { }
         }
     }
 }

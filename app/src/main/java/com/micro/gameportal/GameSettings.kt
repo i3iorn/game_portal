@@ -40,6 +40,10 @@ class GameSettings(private val context: Context) {
         get() = prefs.getInt("color_theme", 0)
         set(value) = prefs.edit().putInt("color_theme", value).apply()
 
+    /** One-time hint bookkeeping, keyed per game. */
+    fun hintSeen(key: String): Boolean = prefs.getBoolean("hint_$key", false)
+    fun markHintSeen(key: String) = prefs.edit().putBoolean("hint_$key", true).apply()
+
     /** Global: haptic + tone feedback on game events. */
     var feedbackEnabled: Boolean
         get() = prefs.getBoolean("feedback_enabled", true)

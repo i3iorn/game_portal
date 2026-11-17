@@ -25,12 +25,22 @@ class Game2048Activity : Activity() {
     private lateinit var status: TextView
     private lateinit var boardGrid: View
     private val scores by lazy { ScoreStore(this, "game2048") }
+    private var previousBoard: IntArray? = null
+    private var winShown = false
+    private var hintView: TextView? = null
+    private val settings by lazy { GameSettings(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Ui.setupEnter(this)
         game = Game2048()
         val root = Ui.gameRoot(this)
+        root.addView(Ui.topBar(this, "2048") { Ui.back(this) })
         status = Ui.status(this)
+        if (!settings.hintSeen("2048")) {
+            hintView = Ui.hint(this, "Swipe to slide and merge tiles")
+            root.addView(hintView)
+        }
         val grid = buildGrid()
         grid.setOnTouchListener(SwipeListener { direction -> onSwipe(direction) })
         Ui.addCentered(root, status)
@@ -44,6 +54,9 @@ class Game2048Activity : Activity() {
             if (game.undo()) render()
         })
         actions.addView(Ui.button(this, "New game") {
+            ResultOverlay.dismiss()
+            winShown = false
+            previousBoard = null
             game.newGame()
             render()
         })
@@ -58,6 +71,7 @@ class Game2048Activity : Activity() {
         outState.putIntArray(STATE_BOARD, game.board)
         outState.putInt(STATE_SCORE, game.score)
         outState.putInt(STATE_STATUS, game.status)
+        if (game.status == Game2048.WIN) winShown = true
     }
 
     private fun restoreOrStart(saved: Bundle?) {
@@ -80,11 +94,47 @@ class Game2048Activity : Activity() {
     }
 
     private fun onSwipe(direction: Game2048.Direction) {
+        val previousScore = game.score
         if (!game.move(direction)) return
-        Feedback.haptic(boardGrid)
-        Feedback.play(this, Feedback.Sound.MOVE)
+        consumeHint()
+        val gained = game.score - previousScore
+        if (gained > 0) {
+            Feedback.play(this, Feedback.Sound.MATCH)
+            Feedback.haptic(boardGrid)
+        } else {
+            Feedback.haptic(boardGrid, Feedback.HapticStrength.LIGHT)
+        }
         scores.submit(KEY_BEST_SCORE, game.score.toLong(), lowerIsBetter = false)
         render()
+        showEndOverlayIfNeeded()
+    }
+
+    private fun consumeHint() {
+        if (hintView != null) {
+            settings.markHintSeen("2048")
+            hintView?.visibility = View.GONE
+            hintView = null
+        }
+    }
+
+    private fun showEndOverlayIfNeeded() {
+        when {
+            game.status == Game2048.LOST -> {
+                GameStats.recordEnd(this, "2048", won = false)
+                ResultOverlay.show(this, "No moves left", "Score ${game.score} · best ${bestScore()}") {
+                    ResultOverlay.dismiss()
+                    winShown = false
+                    previousBoard = null
+                    game.newGame()
+                    render()
+                }
+            }
+            game.status == Game2048.WIN && !winShown -> {
+                winShown = true
+                GameStats.recordEnd(this, "2048", won = true)
+                ResultOverlay.show(this, "2048!", "Score ${game.score} — keep going for more") { }
+            }
+        }
     }
 
     private fun bestScore(): Long = scores.best(KEY_BEST_SCORE) ?: 0L
@@ -95,11 +145,29 @@ class Game2048Activity : Activity() {
             tile.text = if (v == 0) "" else v.toString()
             Ui.cell(tile, if (v == 0) Ui.theme(this@Game2048Activity).surfaceDim else tileColor(v), radiusDp = 10f)
             tile.setTextColor(if (v >= 8) Color.WHITE else Color.DKGRAY)
+            animateTileChange(tile, previousBoard?.get(index), v)
         }
+        previousBoard = game.board.copyOf()
         status.text = when {
             game.status == Game2048.LOST -> "No moves left! Score: ${game.score}  (best ${bestScore()})"
             else -> "Score: ${game.score}  (best ${bestScore()})" +
                 if (game.status == Game2048.WIN) "  — 2048! Keep going" else ""
+        }
+    }
+
+    /** Pop-in for spawns, bump for merges; silent when no previous board. */
+    private fun animateTileChange(tile: TextView, old: Int?, new: Int) {
+        when {
+            old == null || (old == 0 && new == 0) || old == new -> return
+            old == 0 -> {
+                tile.scaleX = 0.55f; tile.scaleY = 0.55f
+                tile.animate().scaleX(1f).scaleY(1f).setDuration(130).start()
+            }
+            new > old -> {
+                tile.animate().scaleX(1.18f).scaleY(1.18f).setDuration(80)
+                    .withEndAction { tile.animate().scaleX(1f).scaleY(1f).setDuration(90).start() }
+                    .start()
+            }
         }
     }
 
