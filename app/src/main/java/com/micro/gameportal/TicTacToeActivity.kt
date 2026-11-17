@@ -25,7 +25,7 @@ class TicTacToeActivity : Activity() {
     private lateinit var opponentButton: Button
 
     private var mode = TicTacToeAi.Difficulty.HUMAN
-    private var aiPending = false
+    private var pendingAi: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,19 +106,25 @@ class TicTacToeActivity : Activity() {
         scheduleAiMove()
     }
 
-    /** Queues the AI's move (non-HUMAN modes play O) unless the game is over. */
+    /** Queues the AI's move (non-HUMAN modes play O), cancelling any pending one. */
     private fun scheduleAiMove() {
+        pendingAi?.let { board.removeCallbacks(it) }
+        pendingAi = null
         if (mode == TicTacToeAi.Difficulty.HUMAN || game.winner != TicTacToeGame.EMPTY || game.isFull) return
-        aiPending = true
-        board.postDelayed({
-            aiPending = false
-            if (mode == TicTacToeAi.Difficulty.HUMAN || game.winner != TicTacToeGame.EMPTY || game.isFull) return@postDelayed
+        val runnable = Runnable {
+            pendingAi = null
+            // Only ever move as O, and only if the position is still live (guards
+            // against stale callbacks firing after a reset or a human move).
+            if (mode == TicTacToeAi.Difficulty.HUMAN || game.current != TicTacToeGame.O) return@Runnable
+            if (game.winner != TicTacToeGame.EMPTY || game.isFull) return@Runnable
             val move = TicTacToeAi(game, mode).bestMove()
             if (move >= 0 && game.play(move)) {
                 board.invalidate()
                 render()
             }
-        }, AI_DELAY_MS)
+        }
+        pendingAi = runnable
+        board.postDelayed(runnable, AI_DELAY_MS)
     }
 
     private fun render() {
