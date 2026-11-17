@@ -35,6 +35,11 @@ class GameSettings(private val context: Context) {
         get() = prefs.getInt("ttt_opponent", 0)
         set(value) = prefs.edit().putInt("ttt_opponent", value).apply()
 
+    /** Index into Palette.PRESETS — "change all app colors". */
+    var colorTheme: Int
+        get() = prefs.getInt("color_theme", 0)
+        set(value) = prefs.edit().putInt("color_theme", value).apply()
+
     /** Global: haptic + tone feedback on game events. */
     var feedbackEnabled: Boolean
         get() = prefs.getBoolean("feedback_enabled", true)

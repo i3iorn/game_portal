@@ -1,7 +1,6 @@
 package com.micro.gameportal
 
 import android.app.Activity
-import android.media.ToneGenerator
 import android.os.Bundle
 import android.widget.Button
 import android.widget.GridLayout
@@ -31,8 +30,8 @@ class MemoryActivity : Activity() {
             columnCount = 4
             cells.forEachIndexed { index, button ->
                 button.textSize = 22f
-                button.setTextColor(Ui.TEXT)
-                Ui.cell(button, 0xFF4A3E2C.toInt())
+                button.setTextColor(Ui.theme(this@MemoryActivity).text)
+                Ui.cell(button, Ui.theme(this@MemoryActivity).surfaceDim)
                 button.setOnClickListener { onCellTap(index) }
                 addView(
                     button,
@@ -69,16 +68,16 @@ class MemoryActivity : Activity() {
             is MemoryGame.FlipResult.Matched -> {
                 cells[result.first].text = game.faces[result.first]
                 cells[result.second].text = game.faces[result.second]
-                Feedback.play(this, ToneGenerator.TONE_PROP_BEEP)
+                Feedback.play(this, Feedback.Sound.MATCH)
                 if (game.isCleared) {
-                    Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
+                    Feedback.play(this, Feedback.Sound.SUCCESS)
                     status.text = "Cleared! All pairs found."
                 }
             }
             is MemoryGame.FlipResult.Mismatched -> {
                 cells[result.first].text = game.faces[result.first]
                 cells[result.second].text = game.faces[result.second]
-                Feedback.play(this, ToneGenerator.TONE_PROP_NACK, 150)
+                Feedback.play(this, Feedback.Sound.MISMATCH)
                 cells[result.first].postDelayed({
                     game.hideMismatch(result.first, result.second)
                     render()
@@ -92,7 +91,7 @@ class MemoryActivity : Activity() {
         cells.forEachIndexed { index, button ->
             val hidden = game.states[index] == MemoryGame.CardState.HIDDEN
             button.text = if (hidden) "" else game.faces[index]
-            Ui.cell(button, if (hidden) 0xFF4A3E2C.toInt() else 0xFF6D5C43.toInt())
+            Ui.cell(button, if (hidden) Ui.theme(this@MemoryActivity).surfaceDim else Ui.theme(this@MemoryActivity).primary)
         }
     }
 }

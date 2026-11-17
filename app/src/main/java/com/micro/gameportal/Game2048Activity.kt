@@ -2,7 +2,6 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.graphics.Color
-import android.media.ToneGenerator
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
@@ -41,7 +40,7 @@ class Game2048Activity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        actions.addView(Ui.button(this, "Undo", quiet = true) {
+        actions.addView(Ui.button(this, "Undo", size = Ui.ButtonSize.COMPACT, quiet = true) {
             if (game.undo()) render()
         })
         actions.addView(Ui.button(this, "New game") {
@@ -89,7 +88,7 @@ class Game2048Activity : Activity() {
     private fun onSwipe(direction: Game2048.Direction) {
         if (!game.move(direction)) return
         Feedback.haptic(boardGrid)
-        Feedback.play(this, ToneGenerator.TONE_PROP_BEEP)
+        Feedback.play(this, Feedback.Sound.MOVE)
         scores.submit(KEY_BEST_SCORE, game.score.toLong(), lowerIsBetter = false)
         render()
     }
@@ -100,7 +99,7 @@ class Game2048Activity : Activity() {
         tiles.forEachIndexed { index, tile ->
             val v = game.board[index]
             tile.text = if (v == 0) "" else v.toString()
-            Ui.cell(tile, if (v == 0) Ui.SURFACE_DIM else tileColor(v), radiusDp = 10f)
+            Ui.cell(tile, if (v == 0) Ui.theme(this@Game2048Activity).surfaceDim else tileColor(v), radiusDp = 10f)
             tile.setTextColor(if (v >= 8) Color.WHITE else Color.DKGRAY)
         }
         status.text = when {

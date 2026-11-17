@@ -2,7 +2,6 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.graphics.Color
-import android.media.ToneGenerator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -101,10 +100,10 @@ class MinefieldActivity : Activity() {
             cells.forEachIndexed { index, button ->
                 button.textSize = (cell / 4f).coerceAtMost(16f)
                 button.setPadding(0, 0, 0, 0)
-                Ui.cell(button, 0xFF8A7A5E.toInt(), radiusDp = 6f)
+                Ui.cell(button, Ui.theme(this@MinefieldActivity).primary, radiusDp = 6f)
                 button.setOnClickListener { onCellTap(index) }
                 button.setOnLongClickListener {
-                    Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_PROP_BEEP, 80)
+                    Feedback.play(this@MinefieldActivity, Feedback.Sound.MOVE)
                     field.toggleFlag(index); render(); true
                 }
                 addView(
@@ -142,9 +141,9 @@ class MinefieldActivity : Activity() {
             stopClock()
             if (wasMine) {
                 Feedback.haptic(cells[index])
-                Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_SUP_ERROR, 600)
+                Feedback.play(this@MinefieldActivity, Feedback.Sound.ERROR)
             } else {
-                Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_PROP_ACK, 300)
+                Feedback.play(this@MinefieldActivity, Feedback.Sound.SUCCESS)
                 scores.submit(bestKey(), elapsedMs(), lowerIsBetter = true)
             }
         }
@@ -179,13 +178,13 @@ class MinefieldActivity : Activity() {
                     val count = field.adjacentMines(index)
                     button.text = if (count == 0) "" else count.toString()
                     button.setTextColor(countColor(count))
-                    Ui.cell(button, 0xFF5A4E3A.toInt(), radiusDp = 6f)
+                    Ui.cell(button, Ui.theme(this@MinefieldActivity).surfaceDim, radiusDp = 6f)
                 }
-                Minefield.FLAGGED -> { button.text = "⚑"; Ui.cell(button, 0xFF6D5C43.toInt(), radiusDp = 6f) }
+                Minefield.FLAGGED -> { button.text = "⚑"; Ui.cell(button, Ui.theme(this@MinefieldActivity).primary, radiusDp = 6f) }
                 Minefield.BLAST -> { button.text = "✸"; Ui.cell(button, Color.RED, radiusDp = 6f) }
                 else -> {
                     button.text = if (field.isOver && field.mines[index]) "✸" else ""
-                    Ui.cell(button, 0xFF8A7A5E.toInt(), radiusDp = 6f)
+                    Ui.cell(button, Ui.theme(this@MinefieldActivity).primary, radiusDp = 6f)
                 }
             }
         }

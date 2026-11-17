@@ -1,7 +1,6 @@
 package com.micro.gameportal
 
 import android.app.Activity
-import android.media.ToneGenerator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -89,8 +88,8 @@ class SlidingPuzzleActivity : Activity() {
             columnCount = size
             cells.forEachIndexed { index, button ->
                 button.textSize = (cell / 5f).coerceAtMost(24f)
-                button.setTextColor(Ui.TEXT)
-                Ui.cell(button, 0xFF6D5C43.toInt())
+                button.setTextColor(Ui.theme(this@SlidingPuzzleActivity).text)
+                Ui.cell(button, Ui.theme(this@SlidingPuzzleActivity).primary)
                 button.setOnClickListener { onCellTap(index) }
                 addView(
                     button,
@@ -130,7 +129,7 @@ class SlidingPuzzleActivity : Activity() {
             solvedElapsedMs = elapsedMs()
             running = false
             handler.removeCallbacks(tick)
-            Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
+            Feedback.play(this, Feedback.Sound.SUCCESS)
             scores.submit(KEY_BEST_MOVES, game.moves.toLong(), lowerIsBetter = true)
             scores.submit(KEY_BEST_MS, solvedElapsedMs, lowerIsBetter = true)
         }

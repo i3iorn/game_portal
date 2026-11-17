@@ -2,7 +2,6 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.graphics.Color
-import android.media.ToneGenerator
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
@@ -31,13 +30,13 @@ class TicTacToeActivity : Activity() {
         super.onCreate(savedInstanceState)
         val root = Ui.gameRoot(this)
         status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
-        board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.SURFACE, radiusDp = 14f, ripple = false) }
+        board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.theme(this@TicTacToeActivity).surface, radiusDp = 14f, ripple = false) }
         board.onCellTapped = ::onCellTapped
         Ui.addCentered(root, status)
         Ui.addCentered(root, board)
-        opponentButton = Ui.button(this, "") { cycleOpponent() }
+        opponentButton = Ui.button(this, "", size = Ui.ButtonSize.WIDE) { cycleOpponent() }
         Ui.addCentered(root, opponentButton)
-        Ui.addCentered(root, Ui.button(this, "New game") {
+        Ui.addCentered(root, Ui.button(this, "New game", size = Ui.ButtonSize.WIDE) {
             game.reset()
             board.game = game
             render()
@@ -92,7 +91,7 @@ class TicTacToeActivity : Activity() {
         if (mode != TicTacToeAi.Difficulty.HUMAN && game.current == TicTacToeGame.O) return
         if (!game.play(index)) return
         Feedback.haptic(board)
-        if (game.winner != TicTacToeGame.EMPTY) Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
+        if (game.winner != TicTacToeGame.EMPTY) Feedback.play(this, Feedback.Sound.SUCCESS)
         board.invalidate()
         render()
         scheduleAiMove()

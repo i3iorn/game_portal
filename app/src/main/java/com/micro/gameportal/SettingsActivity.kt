@@ -51,11 +51,14 @@ class SettingsActivity : Activity() {
         })
 
         root.addView(Ui.header(this, "GENERAL"))
+        root.addView(optionRow("Color theme", Palette.byIndex(settings.colorTheme).name) {
+            settings.colorTheme = (settings.colorTheme + 1) % Palette.PRESETS.size
+        })
         root.addView(optionRow("Sound & vibration", if (settings.feedbackEnabled) "On" else "Off") {
             settings.feedbackEnabled = !settings.feedbackEnabled
         })
 
-        Ui.addCentered(root, Ui.button(this, "Back", quiet = true) { finish() })
+        Ui.addCentered(root, Ui.button(this, "Back", size = Ui.ButtonSize.COMPACT, quiet = true) { finish() })
         return root
     }
 
@@ -74,7 +77,7 @@ class SettingsActivity : Activity() {
             },
         )
         row.addView(
-            Ui.button(this, value, quiet = true) {
+            Ui.button(this, value, size = Ui.ButtonSize.COMPACT, quiet = true) {
                 cycle()
                 setContentView(build())
             },

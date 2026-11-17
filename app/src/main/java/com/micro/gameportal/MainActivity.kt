@@ -33,7 +33,7 @@ class MainActivity : Activity() {
         ).forEach { entry ->
             Ui.addCentered(root, buildEntryRow(entry))
         }
-        Ui.addCentered(root, Ui.button(this, "Settings", quiet = true) {
+        Ui.addCentered(root, Ui.button(this, "Settings", size = Ui.ButtonSize.COMPACT, quiet = true) {
             startActivity(Intent(this, SettingsActivity::class.java))
         })
         setContentView(root)
