@@ -22,9 +22,10 @@ class MemoryActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         game = MemoryGame()
-        val root = Ui.gameRoot(this)
+        val scaffold = Ui.gameScaffold(this)
+        val root = scaffold.root
         status = Ui.status(this, "Find all pairs!")
-        Ui.addCentered(root, status)
+        scaffold.controls.addView(status)
         cells = Array(game.faces.size) { Button(this) }
         val grid = SquareGridLayout(this).apply {
             columnCount = 4
@@ -36,7 +37,7 @@ class MemoryActivity : Activity() {
                 addView(button, cellParams(index / 4, index % 4, 4))
             }
         }
-        root.addView(grid, SquareGridLayout.fillLayoutParams())
+        scaffold.board.addView(grid, SquareGridLayout.fillLayoutParams())
         setContentView(root)
         restoreOrStart(savedInstanceState)
         render()

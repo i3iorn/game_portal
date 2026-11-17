@@ -91,9 +91,10 @@ class MinefieldActivity : Activity() {
     private fun buildContent(preset: Int): android.view.View {
         val (rows, cols, _) = presetFields(preset)
         val cell = (GRID_MAX_PX / cols).coerceIn(56, 90)
-        val root = Ui.gameRoot(this)
+        val scaffold = Ui.gameScaffold(this)
+        val root = scaffold.root
         status = Ui.status(this)
-        Ui.addCentered(root, status)
+        scaffold.controls.addView(status)
         cells = Array(rows * cols) { Button(this) }
         val grid = SquareGridLayout(this).apply {
             columnCount = cols
@@ -109,8 +110,8 @@ class MinefieldActivity : Activity() {
                 addView(button, cellParams(index / cols, index % cols, 2))
             }
         }
-        root.addView(grid, SquareGridLayout.fillLayoutParams())
-        Ui.addCentered(root, Ui.button(this, "New game") {
+        scaffold.board.addView(grid, SquareGridLayout.fillLayoutParams())
+        Ui.addCentered(scaffold.controls, Ui.button(this, "New game") {
             field = Minefield(rows = rows, cols = cols, mineCount = presetFields(preset).third)
             elapsedBaseMs = 0L
             render()

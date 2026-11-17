@@ -29,16 +29,17 @@ class TicTacToeActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Ui.setupEnter(this)
-        val root = Ui.gameRoot(this)
-        root.addView(Ui.topBar(this, "Tic-Tac-Toe") { Ui.back(this) })
+        val scaffold = Ui.gameScaffold(this)
+        val root = scaffold.root
+        scaffold.controls.addView(Ui.topBar(this, "Tic-Tac-Toe") { Ui.back(this) })
         status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
         board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.theme(this@TicTacToeActivity).surface, radiusDp = 14f, ripple = false) }
         board.onCellTapped = ::onCellTapped
-        Ui.addCentered(root, status)
-        root.addView(board, SquareGridLayout.fillLayoutParams())
+        scaffold.controls.addView(status)
+        scaffold.board.addView(board, SquareGridLayout.fillLayoutParams())
         opponentButton = Ui.button(this, "", size = Ui.ButtonSize.WIDE) { cycleOpponent() }
-        Ui.addCentered(root, opponentButton)
-        Ui.addCentered(root, Ui.button(this, "New game", size = Ui.ButtonSize.WIDE) {
+        Ui.addCentered(scaffold.controls, opponentButton)
+        Ui.addCentered(scaffold.controls, Ui.button(this, "New game", size = Ui.ButtonSize.WIDE) {
             game.reset()
             board.game = game
             render()

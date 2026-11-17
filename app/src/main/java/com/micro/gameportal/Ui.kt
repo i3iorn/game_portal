@@ -3,6 +3,7 @@ package com.micro.gameportal
 import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
@@ -12,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 
 /**
  * Shared UI kit. All colors come from the active [Palette] (user-selectable
@@ -134,6 +136,51 @@ object Ui {
         setPadding(0, dp(activity, 4f), 0, dp(activity, 4f))
     }
 
+    /**
+     * Board + controls layout. On expanded screens (smallest width >= 600dp)
+     * the board sits beside a fixed-width controls column; otherwise both
+     * holders are the same centered root column.
+     */
+    class GameScaffold(val root: LinearLayout, val board: LinearLayout, val controls: LinearLayout)
+
+    fun gameScaffold(activity: Activity): GameScaffold {
+        val palette = theme(activity)
+        val root = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setBackgroundColor(palette.background)
+            val side = dp(activity, 16f)
+            setPadding(side, 0, side, 0)
+            setOnApplyWindowInsetsListener { view, insets ->
+                view.setPadding(side, insets.systemWindowInsetTop + dp(activity, 4f), side, insets.systemWindowInsetBottom)
+                insets
+            }
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
+        }
+        val expanded = activity.resources.configuration.smallestScreenWidthDp >= 600
+        return if (expanded) {
+            val board = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+            }
+            val controls = LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(activity, 8f), 0, dp(activity, 8f), 0)
+                layoutParams = LinearLayout.LayoutParams(dp(activity, 320f), ViewGroup.LayoutParams.MATCH_PARENT)
+            }
+            root.addView(board)
+            root.addView(controls)
+            GameScaffold(root, board, controls)
+        } else {
+            GameScaffold(root, root, root)
+        }
+    }
+
     /** Big screen title. */
     fun title(activity: Activity, text: String): TextView = TextView(activity).apply {
         this.text = text
@@ -207,10 +254,13 @@ object Ui {
     }
 
     /** Card-style container for home screen rows. */
-    fun card(activity: Activity, content: View): View = LinearLayout(activity).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        background = rounded(activity, theme(activity).surface, radiusDp = 14f, ripple = true)
+    fun card(activity: Activity, content: View): View = MaterialCardView(activity).apply {
+        setCardBackgroundColor(theme(activity).surface)
+        radius = dp(activity, 14f).toFloat()
+        cardElevation = dp(activity, 1f).toFloat()
+        isClickable = true
+        isFocusable = true
+        rippleColor = ColorStateList.valueOf(0x40FFFFFF)
         setPadding(dp(activity, 12f), dp(activity, 8f), dp(activity, 12f), dp(activity, 8f))
         addView(
             content,

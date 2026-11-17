@@ -34,18 +34,19 @@ class Game2048Activity : Activity() {
         super.onCreate(savedInstanceState)
         Ui.setupEnter(this)
         game = Game2048()
-        val root = Ui.gameRoot(this)
-        root.addView(Ui.topBar(this, "2048") { Ui.back(this) })
+        val scaffold = Ui.gameScaffold(this)
+        val root = scaffold.root
+        scaffold.controls.addView(Ui.topBar(this, "2048") { Ui.back(this) })
         status = Ui.status(this)
         if (!settings.hintSeen("2048")) {
             hintView = Ui.hint(this, "Swipe to slide and merge tiles")
-            root.addView(hintView)
+            scaffold.controls.addView(hintView)
         }
         val grid = buildGrid()
         grid.setOnTouchListener(SwipeListener { direction -> onSwipe(direction) })
-        Ui.addCentered(root, status)
+        scaffold.controls.addView(status)
         boardGrid = grid
-        root.addView(grid, SquareGridLayout.fillLayoutParams())
+        scaffold.board.addView(grid, SquareGridLayout.fillLayoutParams())
         val actions = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -60,7 +61,7 @@ class Game2048Activity : Activity() {
             game.newGame()
             render()
         })
-        Ui.addCentered(root, actions)
+        Ui.addCentered(scaffold.controls, actions)
         setContentView(root)
         restoreOrStart(savedInstanceState)
         render()

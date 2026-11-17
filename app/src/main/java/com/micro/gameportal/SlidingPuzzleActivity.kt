@@ -80,9 +80,10 @@ class SlidingPuzzleActivity : Activity() {
 
     private fun buildContent(size: Int): android.view.View {
         val cell = (GRID_MAX_PX / size).coerceAtLeast(56)
-        val root = Ui.gameRoot(this)
+        val scaffold = Ui.gameScaffold(this)
+        val root = scaffold.root
         status = Ui.status(this)
-        Ui.addCentered(root, status)
+        scaffold.controls.addView(status)
         cells = Array(size * size) { Button(this) }
         val grid = SquareGridLayout(this).apply {
             columnCount = size
@@ -94,8 +95,8 @@ class SlidingPuzzleActivity : Activity() {
                 addView(button, cellParams(index / size, index % size, 4))
             }
         }
-        root.addView(grid, SquareGridLayout.fillLayoutParams())
-        Ui.addCentered(root, Ui.button(this, "New game") {
+        scaffold.board.addView(grid, SquareGridLayout.fillLayoutParams())
+        Ui.addCentered(scaffold.controls, Ui.button(this, "New game") {
             game.newGame()
             elapsedBaseMs = 0L
             solvedElapsedMs = -1L

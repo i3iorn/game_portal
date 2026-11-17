@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.google.android.material.card.MaterialCardView
 
 /**
  * End-of-game overlay: a centered result card over a dimmed screen with
@@ -25,13 +26,24 @@ object ResultOverlay {
     fun show(activity: Activity, title: String, detail: String, onNewGame: () -> Unit) {
         dismiss()
         val palette = Ui.theme(activity)
-        val card = LinearLayout(activity).apply {
+        val inner = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            background = Ui.rounded(activity, palette.surface, radiusDp = 18f, ripple = false)
-            setPadding(Ui.dp(activity, 24f), Ui.dp(activity, 24f), Ui.dp(activity, 24f), Ui.dp(activity, 20f))
         }
-        card.addView(
+        val card = MaterialCardView(activity).apply {
+            setCardBackgroundColor(palette.surface)
+            radius = Ui.dp(activity, 18f).toFloat()
+            cardElevation = Ui.dp(activity, 6f).toFloat()
+            setPadding(Ui.dp(activity, 24f), Ui.dp(activity, 24f), Ui.dp(activity, 24f), Ui.dp(activity, 20f))
+            addView(
+                inner,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                ),
+            )
+        }
+        inner.addView(
             TextView(activity).apply {
                 text = title
                 textSize = 22f
@@ -43,7 +55,7 @@ object ResultOverlay {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ),
         )
-        card.addView(
+        inner.addView(
             TextView(activity).apply {
                 text = detail
                 textSize = 14f
@@ -67,7 +79,7 @@ object ResultOverlay {
         actions.addView(Ui.button(activity, "Close", size = Ui.ButtonSize.COMPACT, quiet = true) {
             dismiss()
         })
-        card.addView(actions)
+        inner.addView(actions)
         val dialog = Dialog(activity).apply {
             requestWindowFeature(Window.FEATURE_NO_TITLE)
             setContentView(card)
