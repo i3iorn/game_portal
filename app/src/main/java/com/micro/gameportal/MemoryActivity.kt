@@ -13,19 +13,18 @@ import android.widget.TextView
 class MemoryActivity : Activity() {
 
     private companion object {
-        val FACES = listOf("🍀", "🚀", "🎲", "🌟", "🎵", "🍎", "⚡", "🧩")
+        const val FLIP_BACK_MS = 700L
+        const val STATE_FACES = "faces"
+        const val STATE_MATCHED = "matched"
     }
 
-    private lateinit var faces: List<String>
+    private lateinit var game: MemoryGame
     private lateinit var cells: Array<Button>
     private lateinit var status: TextView
-    private var firstOpen = -1
-    private var matched = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        faces = FACES + FACES
-        faces = faces.shuffled()
+        game = MemoryGame()
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -35,15 +34,30 @@ class MemoryActivity : Activity() {
         root.addView(status)
         root.addView(buildGrid())
         setContentView(root)
+        restoreOrStart(savedInstanceState)
+        render()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArray(STATE_FACES, game.faces.toTypedArray())
+        outState.putBooleanArray(STATE_MATCHED, game.matchedMask())
+    }
+
+    private fun restoreOrStart(saved: Bundle?) {
+        val faces = saved?.getStringArray(STATE_FACES)
+        if (faces != null) {
+            val matched = saved.getBooleanArray(STATE_MATCHED) ?: BooleanArray(faces.size)
+            game.restoreDeck(faces.toList(), matched)
+        }
     }
 
     private fun buildGrid(): GridLayout {
-        cells = Array(faces.size) { Button(this) }
+        cells = Array(game.faces.size) { Button(this) }
         return GridLayout(this).apply {
             columnCount = 4
             cells.forEachIndexed { index, button ->
                 button.textSize = 22f
-                button.text = ""
                 button.setOnClickListener { onCellTap(index) }
                 addView(
                     button,
@@ -57,21 +71,28 @@ class MemoryActivity : Activity() {
     }
 
     private fun onCellTap(index: Int) {
-        val button = cells[index]
-        if (button.text.isNotEmpty() || firstOpen == index) return
-        button.text = faces[index]
-        if (firstOpen == -1) {
-            firstOpen = index
-            return
+        when (val result = game.flip(index)) {
+            is MemoryGame.FlipResult.First -> cells[index].text = game.faces[index]
+            is MemoryGame.FlipResult.Matched -> {
+                cells[result.first].text = game.faces[result.first]
+                cells[result.second].text = game.faces[result.second]
+                if (game.isCleared) status.text = "Cleared! All pairs found."
+            }
+            is MemoryGame.FlipResult.Mismatched -> {
+                cells[result.first].text = game.faces[result.first]
+                cells[result.second].text = game.faces[result.second]
+                cells[result.first].postDelayed({
+                    game.hideMismatch(result.first, result.second)
+                    render()
+                }, FLIP_BACK_MS)
+            }
+            MemoryGame.FlipResult.Ignored -> return
         }
-        if (faces[firstOpen] == faces[index]) {
-            matched += 2
-            firstOpen = -1
-            if (matched == faces.size) status.text = "Cleared! All pairs found."
-        } else {
-            val first = firstOpen
-            firstOpen = -1
-            button.postDelayed({ cells[first].text = ""; cells[index].text = "" }, 700)
+    }
+
+    private fun render() {
+        cells.forEachIndexed { index, button ->
+            button.text = if (game.states[index] == MemoryGame.CardState.HIDDEN) "" else game.faces[index]
         }
     }
 }
