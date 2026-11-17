@@ -4,25 +4,22 @@ import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.Gravity
-import android.view.View
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Button
 import android.widget.GridLayout
-import android.widget.LinearLayout
 import android.widget.TextView
 
 /**
- * Classic 4x4 sliding number puzzle with a move counter, timer and a
- * per-device best score (fewest moves, then fastest time).
+ * Sliding number puzzle with a move counter, timer and best scores.
+ * Board size comes from Settings; state survives rotation.
  */
 class SlidingPuzzleActivity : Activity() {
 
     private companion object {
         const val TICK_MS = 500L
-        const val PREFS = "sliding_puzzle"
-        const val KEY_BEST_MOVES = "best_moves"
-        const val KEY_BEST_MS = "best_ms"
+        const val GRID_MAX_PX = 660
+        const val KEY_BEST_MOVES = "best_moves_v2"
+        const val KEY_BEST_MS = "best_ms_v2"
+        const val STATE_SIZE = "size"
         const val STATE_BOARD = "board"
         const val STATE_MOVES = "moves"
         const val STATE_ELAPSED = "elapsed"
@@ -37,6 +34,7 @@ class SlidingPuzzleActivity : Activity() {
     private var solvedElapsedMs = -1L
     private val handler = Handler(Looper.getMainLooper())
     private var running = false
+    private val scores by lazy { ScoreStore(this, "sliding_puzzle") }
 
     private val tick = object : Runnable {
         override fun run() {
@@ -47,22 +45,15 @@ class SlidingPuzzleActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        game = SlidingPuzzleGame()
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-        }
-        status = TextView(this).apply { textSize = 18f; setPadding(0, 24, 0, 24) }
-        root.addView(status)
-        root.addView(buildGrid())
-        root.addView(newGameButton())
-        setContentView(root)
+        val size = savedSize(savedInstanceState) ?: GameSettings(this).puzzleSize
+        game = SlidingPuzzleGame(size = size)
+        setContentView(buildContent(size))
         restoreOrStart(savedInstanceState)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putInt(STATE_SIZE, game.size)
         outState.putIntArray(STATE_BOARD, game.board)
         outState.putInt(STATE_MOVES, game.moves)
         outState.putLong(STATE_ELAPSED, elapsedMs())
@@ -85,6 +76,42 @@ class SlidingPuzzleActivity : Activity() {
         handler.removeCallbacks(tick)
     }
 
+    private fun savedSize(saved: Bundle?): Int? = saved?.getInt(STATE_SIZE, -1)?.takeIf { it > 0 }
+
+    private fun buildContent(size: Int): android.view.View {
+        val cell = (GRID_MAX_PX / size).coerceAtLeast(56)
+        val root = Ui.gameRoot(this)
+        status = Ui.status(this)
+        root.addView(status)
+        cells = Array(size * size) { Button(this) }
+        val grid = GridLayout(this).apply {
+            columnCount = size
+            cells.forEachIndexed { index, button ->
+                button.textSize = (cell / 5f).coerceAtMost(24f)
+                button.setOnClickListener { onCellTap(index) }
+                addView(
+                    button,
+                    GridLayout.LayoutParams().apply {
+                        width = cell; height = cell
+                        setMargins(4, 4, 4, 4)
+                    },
+                )
+            }
+        }
+        Ui.addCentered(root, grid)
+        root.addView(Ui.button(this, "New game") {
+            game.newGame()
+            elapsedBaseMs = 0L
+            solvedElapsedMs = -1L
+            startedAtMs = System.currentTimeMillis()
+            running = true
+            handler.removeCallbacks(tick)
+            handler.postDelayed(tick, TICK_MS)
+            render()
+        })
+        return root
+    }
+
     private fun restoreOrStart(saved: Bundle?) {
         val board = saved?.getIntArray(STATE_BOARD)
         if (board != null && !saved.getBoolean(STATE_SOLVED)) {
@@ -95,61 +122,15 @@ class SlidingPuzzleActivity : Activity() {
         render()
     }
 
-    private fun buildGrid(): View {
-        cells = Array(game.board.size) { Button(this) }
-        return GridLayout(this).apply {
-            columnCount = game.size
-            cells.forEachIndexed { index, button ->
-                button.textSize = 24f
-                button.setOnClickListener { onCellTap(index) }
-                addView(
-                    button,
-                    GridLayout.LayoutParams().apply {
-                        width = 170; height = 170
-                        setMargins(4, 4, 4, 4)
-                    },
-                )
-            }
-        }
-    }
-
     private fun onCellTap(index: Int) {
-        if (game.tap(index) && game.isSolved) onSolved()
-        render()
-    }
-
-    private fun onSolved() {
-        solvedElapsedMs = elapsedMs()
-        running = false
-        handler.removeCallbacks(tick)
-        saveBestScoreIfBetter()
-    }
-
-    private fun saveBestScoreIfBetter() {
-        val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-        val bestMoves = prefs.getInt(KEY_BEST_MOVES, Int.MAX_VALUE)
-        val bestMs = prefs.getLong(KEY_BEST_MS, Long.MAX_VALUE)
-        val better = game.moves < bestMoves || (game.moves == bestMoves && solvedElapsedMs < bestMs)
-        if (better) {
-            prefs.edit()
-                .putInt(KEY_BEST_MOVES, game.moves)
-                .putLong(KEY_BEST_MS, solvedElapsedMs)
-                .apply()
-        }
-    }
-
-    private fun newGameButton(): Button = Button(this).apply {
-        text = "New game"
-        setOnClickListener {
-            game.newGame()
-            elapsedBaseMs = 0L
-            solvedElapsedMs = -1L
-            startedAtMs = System.currentTimeMillis()
-            running = true
+        if (game.tap(index) && game.isSolved) {
+            solvedElapsedMs = elapsedMs()
+            running = false
             handler.removeCallbacks(tick)
-            handler.postDelayed(tick, TICK_MS)
-            render()
+            scores.submit(KEY_BEST_MOVES, game.moves.toLong(), lowerIsBetter = true)
+            scores.submit(KEY_BEST_MS, solvedElapsedMs, lowerIsBetter = true)
         }
+        render()
     }
 
     private fun elapsedMs(): Long = when {
@@ -158,11 +139,11 @@ class SlidingPuzzleActivity : Activity() {
         else -> elapsedBaseMs
     }
 
-    private fun bestScoreText(): String {
-        val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-        val moves = prefs.getInt(KEY_BEST_MOVES, -1)
-        if (moves < 0) return ""
-        return "  Best: $moves moves in ${prefs.getLong(KEY_BEST_MS, 0L) / 1000}s"
+    private fun bestText(): String {
+        val moves = scores.best(KEY_BEST_MOVES)
+        if (moves == null) return ""
+        val ms = scores.best(KEY_BEST_MS) ?: 0L
+        return "  Best: ${moves.toInt()} moves in ${ms / 1000}s"
     }
 
     private fun render() {
@@ -170,8 +151,8 @@ class SlidingPuzzleActivity : Activity() {
             button.text = game.board[index].let { if (it == SlidingPuzzleGame.emptyValue(game.size)) "" else it.toString() }
         }
         status.text = when {
-            game.isSolved -> "Solved in ${game.moves} moves, ${elapsedMs() / 1000}s!${bestScoreText()}"
-            else -> "${game.moves} moves, ${elapsedMs() / 1000}s${bestScoreText()}"
+            game.isSolved -> "Solved in ${game.moves} moves, ${elapsedMs() / 1000}s!${bestText()}"
+            else -> "${game.moves} moves, ${elapsedMs() / 1000}s${bestText()}"
         }
     }
 }

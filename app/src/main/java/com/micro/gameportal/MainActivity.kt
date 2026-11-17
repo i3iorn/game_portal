@@ -5,11 +5,8 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -24,12 +21,11 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-        }
-        root.addView(titleView())
+        val root = Ui.gameRoot(this)
+        root.addView(Ui.status(this, "Game Portal").apply {
+            textSize = 28f
+            setPadding(0, 48, 0, 64)
+        })
         listOf(
             GameEntry("Tic-Tac-Toe", TicTacToeActivity::class.java, ::ticTacToePreview),
             GameEntry("15 Puzzle", SlidingPuzzleActivity::class.java, ::puzzlePreview),
@@ -37,29 +33,21 @@ class MainActivity : Activity() {
             GameEntry("2048", Game2048Activity::class.java, ::game2048Preview),
             GameEntry("Minesweeper", MinefieldActivity::class.java, ::minefieldPreview),
             GameEntry("Lights Out", LightsOutActivity::class.java, ::lightsOutPreview),
-        ).forEach { root.addEntryFor(it) }
+        ).forEach { entry ->
+            Ui.addCentered(root, buildEntryRow(entry))
+        }
+        root.addView(Ui.button(this, "Settings") { startActivity(Intent(this, SettingsActivity::class.java)) })
         setContentView(root)
     }
 
-    private fun titleView(): TextView = TextView(this).apply {
-        text = "Game Portal"
-        textSize = 28f
-        gravity = Gravity.CENTER
-        setPadding(0, 48, 0, 64)
-    }
-
-    private fun LinearLayout.addEntryFor(entry: GameEntry) {
-        val row = LinearLayout(this@MainActivity).apply {
+    private fun buildEntryRow(entry: GameEntry): View {
+        val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
         }
         row.addView(entry.preview(), 160, 160)
-        val button = Button(this@MainActivity).apply {
-            text = entry.title
-            setOnClickListener { startActivity(Intent(context, entry.target)) }
-        }
-        row.addView(button, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { setMargins(32, 16, 64, 16) })
-        addView(row, MATCH_PARENT, WRAP_CONTENT)
+        row.addView(Ui.button(this, entry.title) { startActivity(Intent(this@MainActivity, entry.target)) })
+        return row
     }
 
     private fun ticTacToePreview(): View = GamePreviewView(this) { canvas, s ->
@@ -110,10 +98,8 @@ class MainActivity : Activity() {
             canvas.drawLine(s * 0.15f + i * s * 0.175f, s * 0.15f, s * 0.15f + i * s * 0.175f, s * 0.85f, paint)
             canvas.drawLine(s * 0.15f, s * 0.15f + i * s * 0.175f, s * 0.85f, s * 0.15f + i * s * 0.175f, paint)
         }
-        val tile = Paint().apply { color = ORANGE }
-        canvas.drawRect(s * 0.15f, s * 0.675f, s * 0.325f, s * 0.85f, tile)
-        val tile2 = Paint().apply { color = BLUE }
-        canvas.drawRect(s * 0.5f, s * 0.15f, s * 0.675f, s * 0.325f, tile2)
+        canvas.drawRect(s * 0.15f, s * 0.675f, s * 0.325f, s * 0.85f, Paint().apply { color = ORANGE })
+        canvas.drawRect(s * 0.5f, s * 0.15f, s * 0.675f, s * 0.325f, Paint().apply { color = BLUE })
     }
 
     private fun minefieldPreview(): View = GamePreviewView(this) { canvas, s ->

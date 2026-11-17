@@ -3,8 +3,6 @@ package com.micro.gameportal
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -23,24 +21,27 @@ class TicTacToeActivity : Activity() {
     private lateinit var board: TicTacToeBoardView
     private lateinit var status: TextView
     private lateinit var opponentButton: Button
+    private val settings by lazy { GameSettings(this) }
 
     private var mode = TicTacToeAi.Difficulty.HUMAN
     private var pendingAi: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-        }
-        status = TextView(this).apply { textSize = 18f; setPadding(0, 24, 0, 24); setTextColor(Color.DKGRAY) }
+        val root = Ui.gameRoot(this)
+        status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
         board = TicTacToeBoardView(this)
         board.onCellTapped = ::onCellTapped
         root.addView(status)
-        root.addView(board, LinearLayout.LayoutParams(900, 900))
-        root.addView(opponentButton())
-        root.addView(newGameButton())
+        Ui.addCentered(root, board)
+        opponentButton = Ui.button(this, "") { cycleOpponent() }
+        root.addView(opponentButton)
+        root.addView(Ui.button(this, "New game") {
+            game.reset()
+            board.game = game
+            render()
+            scheduleAiMove()
+        })
         setContentView(root)
         restoreOrStart(savedInstanceState)
     }
@@ -53,37 +54,25 @@ class TicTacToeActivity : Activity() {
     }
 
     private fun restoreOrStart(saved: Bundle?) {
-        mode = TicTacToeAi.Difficulty.entries.getOrElse(saved?.getInt(STATE_MODE, 0) ?: 0) { TicTacToeAi.Difficulty.HUMAN }
+        val savedOrdinal = saved?.getInt(STATE_MODE, -1) ?: -1
+        mode = TicTacToeAi.Difficulty.entries.getOrElse(
+            if (savedOrdinal >= 0) savedOrdinal else settings.ticTacToeOpponent,
+        ) { TicTacToeAi.Difficulty.HUMAN }
         opponentButton.text = "Opponent: ${modeLabel()}"
         game = TicTacToeGame()
         val cells = saved?.getIntArray(STATE_CELLS)
         if (cells != null) {
-            game.restore(cells, saved?.getInt(STATE_CURRENT) ?: TicTacToeGame.X)
+            game.restore(cells, saved.getInt(STATE_CURRENT))
         }
         board.game = game
         render()
         scheduleAiMove()
     }
 
-    private fun opponentButton(): Button {
-        opponentButton = Button(this)
-        opponentButton.setOnClickListener { cycleOpponent() }
-        return opponentButton
-    }
-
-    private fun newGameButton(): Button = Button(this).apply {
-        text = "New game"
-        setOnClickListener {
-            game.reset()
-            board.game = game
-            render()
-            scheduleAiMove()
-        }
-    }
-
     private fun cycleOpponent() {
         val next = TicTacToeAi.Difficulty.entries[(mode.ordinal + 1) % TicTacToeAi.Difficulty.entries.size]
         mode = next
+        settings.ticTacToeOpponent = next.ordinal
         opponentButton.text = "Opponent: ${modeLabel()}"
         game.reset()
         board.game = game

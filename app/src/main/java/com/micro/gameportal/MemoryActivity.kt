@@ -2,11 +2,8 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.os.Bundle
-import android.view.Gravity
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Button
 import android.widget.GridLayout
-import android.widget.LinearLayout
 import android.widget.TextView
 
 /** Memory match: 4x4 grid, eight emoji pairs, flip two at a time. */
@@ -25,14 +22,25 @@ class MemoryActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         game = MemoryGame()
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-        }
-        status = TextView(this).apply { text = "Find all pairs!"; textSize = 18f; setPadding(0, 24, 0, 24) }
+        val root = Ui.gameRoot(this)
+        status = Ui.status(this, "Find all pairs!")
         root.addView(status)
-        root.addView(buildGrid())
+        cells = Array(game.faces.size) { Button(this) }
+        val grid = GridLayout(this).apply {
+            columnCount = 4
+            cells.forEachIndexed { index, button ->
+                button.textSize = 22f
+                button.setOnClickListener { onCellTap(index) }
+                addView(
+                    button,
+                    GridLayout.LayoutParams().apply {
+                        width = 170; height = 170
+                        setMargins(4, 4, 4, 4)
+                    },
+                )
+            }
+        }
+        Ui.addCentered(root, grid)
         setContentView(root)
         restoreOrStart(savedInstanceState)
         render()
@@ -49,24 +57,6 @@ class MemoryActivity : Activity() {
         if (faces != null) {
             val matched = saved.getBooleanArray(STATE_MATCHED) ?: BooleanArray(faces.size)
             game.restoreDeck(faces.toList(), matched)
-        }
-    }
-
-    private fun buildGrid(): GridLayout {
-        cells = Array(game.faces.size) { Button(this) }
-        return GridLayout(this).apply {
-            columnCount = 4
-            cells.forEachIndexed { index, button ->
-                button.textSize = 22f
-                button.setOnClickListener { onCellTap(index) }
-                addView(
-                    button,
-                    GridLayout.LayoutParams().apply {
-                        width = 170; height = 170
-                        setMargins(4, 4, 4, 4)
-                    },
-                )
-            }
         }
     }
 

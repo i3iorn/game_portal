@@ -6,41 +6,37 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.GridLayout
-import android.widget.LinearLayout
 import android.widget.TextView
 
-/** 2048: swipe to slide and merge tiles. Highest tile and score shown live. */
+/** 2048: swipe to slide and merge tiles. Score and best score shown live. */
 class Game2048Activity : Activity() {
 
     private companion object {
-        const val PREFS = "game2048"
-        const val KEY_BEST_SCORE = "best_score"
         const val STATE_BOARD = "board"
         const val STATE_SCORE = "score"
         const val STATE_STATUS = "status"
-        const val STATE_WIN_ANNOUNCED = "win_announced"
+        const val KEY_BEST_SCORE = "best_score_v2"
     }
 
     private lateinit var game: Game2048
     private lateinit var tiles: Array<TextView>
     private lateinit var status: TextView
+    private val scores by lazy { ScoreStore(this, "game2048") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         game = Game2048()
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-        }
-        status = TextView(this).apply { textSize = 18f; setPadding(0, 24, 0, 24) }
+        val root = Ui.gameRoot(this)
+        status = Ui.status(this)
         val grid = buildGrid()
         grid.setOnTouchListener(SwipeListener { direction -> onSwipe(direction) })
         root.addView(status)
-        root.addView(grid)
-        root.addView(newGameButton())
+        Ui.addCentered(root, grid)
+        root.addView(Ui.button(this, "New game") {
+            game.newGame()
+            render()
+        })
         setContentView(root)
         restoreOrStart(savedInstanceState)
         render()
@@ -51,13 +47,12 @@ class Game2048Activity : Activity() {
         outState.putIntArray(STATE_BOARD, game.board)
         outState.putInt(STATE_SCORE, game.score)
         outState.putInt(STATE_STATUS, game.status)
-        outState.putBoolean(STATE_WIN_ANNOUNCED, true) // re-derived in restore below
     }
 
     private fun restoreOrStart(saved: Bundle?) {
         val board = saved?.getIntArray(STATE_BOARD)
         if (board != null) {
-            game.restore(board, saved.getInt(STATE_SCORE), saved.getInt(STATE_STATUS), true)
+            game.restore(board, saved.getInt(STATE_SCORE), saved.getInt(STATE_STATUS), board.any { it >= Game2048.WIN_TILE })
         }
     }
 
@@ -81,26 +76,11 @@ class Game2048Activity : Activity() {
 
     private fun onSwipe(direction: Game2048.Direction) {
         if (!game.move(direction)) return
-        saveBestScore()
+        scores.submit(KEY_BEST_SCORE, game.score.toLong(), lowerIsBetter = false)
         render()
     }
 
-    private fun saveBestScore() {
-        val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-        if (game.score > prefs.getInt(KEY_BEST_SCORE, 0)) {
-            prefs.edit().putInt(KEY_BEST_SCORE, game.score).apply()
-        }
-    }
-
-    private fun bestScore(): Int = getSharedPreferences(PREFS, MODE_PRIVATE).getInt(KEY_BEST_SCORE, 0)
-
-    private fun newGameButton(): View = android.widget.Button(this).apply {
-        text = "New game"
-        setOnClickListener {
-            game.newGame()
-            render()
-        }
-    }
+    private fun bestScore(): Long = scores.best(KEY_BEST_SCORE) ?: 0L
 
     private fun render() {
         tiles.forEachIndexed { index, tile ->
