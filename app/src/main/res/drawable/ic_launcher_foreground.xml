@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ties the launcher icon to the home-screen previews: a 3x3 grid with X and O. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- grid lines (inset for the adaptive-icon safe zone) -->
+    <path
+        android:pathData="M48,30 L48,78 M60,30 L60,78 M30,48 L78,48 M30,60 L78,60"
+        android:strokeColor="#5B6770"
+        android:strokeWidth="3.5" />
+
+    <!-- X -->
+    <path
+        android:pathData="M36,33 L44,41 M44,33 L36,41"
+        android:strokeColor="#1E88E5"
+        android:strokeWidth="5"
+        android:strokeLineCap="round" />
+
+    <!-- O -->
+    <path
+        android:pathData="M54,64 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:strokeColor="#E53935"
+        android:strokeWidth="5" />
+</vector>

@@ -1,13 +1,18 @@
 # Game Portal
 
-Android app with common puzzle games (currently: 15 Puzzle, Memory Match).
+Android app with common puzzle games (currently: Tic-Tac-Toe, 15 Puzzle, Memory Match).
 Built with Kotlin, Views, and Gradle (AGP 9, Kotlin via AGP built-in Kotlin support).
+
+Tic-Tac-Toe has a built-in opponent (Easy / Medium / Hard minimax). The 15 Puzzle
+tracks moves and time with a best score; Memory Match and both other games
+survive device rotation.
 
 ## Build
 
 ```
 ./gradlew.bat assembleDebug        # local dev build (needs Android SDK, see local.properties)
-./gradlew.bat assembleRelease      # release build
+./gradlew.bat assembleRelease      # release build (R8-minified)
+./gradlew.bat test                 # JVM unit tests for the pure game logic
 ```
 
 ## Releases
