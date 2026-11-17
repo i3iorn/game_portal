@@ -12,7 +12,7 @@ Built with Kotlin, Views, and Gradle (AGP 9, Kotlin via AGP built-in Kotlin supp
 
 ## Releases
 
-CI (`.github/workflows/release.yml`) builds an unsigned release APK and creates a
+CI (`.github/workflows/release.yml`) builds a release APK and creates a
 GitHub release with the APK attached whenever a tag is pushed. Tags must match:
 
 ```

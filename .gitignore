@@ -10,7 +10,10 @@ build/
 local.properties
 captures/
 *.apk
-*.keystore
+*.jks
+
+# Release signing (keystore + credentials) — never commit
+keystore/
 
 # OS
 .DS_Store
