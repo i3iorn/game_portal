@@ -55,7 +55,7 @@ class SettingsActivity : Activity() {
             settings.feedbackEnabled = !settings.feedbackEnabled
         })
 
-        Ui.addCentered(root, Ui.button(this, "Back") { finish() })
+        Ui.addCentered(root, Ui.button(this, "Back", quiet = true) { finish() })
         return root
     }
 
@@ -74,12 +74,9 @@ class SettingsActivity : Activity() {
             },
         )
         row.addView(
-            Button(this).apply {
-                text = value
-                setOnClickListener {
-                    cycle()
-                    setContentView(build())
-                }
+            Ui.button(this, value, quiet = true) {
+                cycle()
+                setContentView(build())
             },
         )
         return row

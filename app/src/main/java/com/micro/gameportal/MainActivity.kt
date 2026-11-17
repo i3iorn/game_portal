@@ -22,10 +22,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val root = Ui.gameRoot(this)
-        root.addView(Ui.status(this, "Game Portal").apply {
-            textSize = 28f
-            setPadding(0, 48, 0, 64)
-        })
+        root.addView(Ui.title(this, "Game Portal"))
         listOf(
             GameEntry("Tic-Tac-Toe", TicTacToeActivity::class.java, ::ticTacToePreview),
             GameEntry("15 Puzzle", SlidingPuzzleActivity::class.java, ::puzzlePreview),
@@ -36,7 +33,9 @@ class MainActivity : Activity() {
         ).forEach { entry ->
             Ui.addCentered(root, buildEntryRow(entry))
         }
-        root.addView(Ui.button(this, "Settings") { startActivity(Intent(this, SettingsActivity::class.java)) })
+        Ui.addCentered(root, Ui.button(this, "Settings", quiet = true) {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        })
         setContentView(root)
     }
 
@@ -47,7 +46,8 @@ class MainActivity : Activity() {
         }
         row.addView(entry.preview(), 160, 160)
         row.addView(Ui.button(this, entry.title) { startActivity(Intent(this@MainActivity, entry.target)) })
-        return row
+        row.setPadding(0, 0, 0, 0)
+        return Ui.card(this, row)
     }
 
     private fun ticTacToePreview(): View = GamePreviewView(this) { canvas, s ->

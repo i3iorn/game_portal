@@ -31,6 +31,8 @@ class MemoryActivity : Activity() {
             columnCount = 4
             cells.forEachIndexed { index, button ->
                 button.textSize = 22f
+                button.setTextColor(Ui.TEXT)
+                Ui.cell(button, 0xFF4A3E2C.toInt())
                 button.setOnClickListener { onCellTap(index) }
                 addView(
                     button,
@@ -88,7 +90,9 @@ class MemoryActivity : Activity() {
 
     private fun render() {
         cells.forEachIndexed { index, button ->
-            button.text = if (game.states[index] == MemoryGame.CardState.HIDDEN) "" else game.faces[index]
+            val hidden = game.states[index] == MemoryGame.CardState.HIDDEN
+            button.text = if (hidden) "" else game.faces[index]
+            Ui.cell(button, if (hidden) 0xFF4A3E2C.toInt() else 0xFF6D5C43.toInt())
         }
     }
 }

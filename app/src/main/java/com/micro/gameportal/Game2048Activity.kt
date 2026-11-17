@@ -41,7 +41,7 @@ class Game2048Activity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        actions.addView(Ui.button(this, "Undo") {
+        actions.addView(Ui.button(this, "Undo", quiet = true) {
             if (game.undo()) render()
         })
         actions.addView(Ui.button(this, "New game") {
@@ -100,7 +100,7 @@ class Game2048Activity : Activity() {
         tiles.forEachIndexed { index, tile ->
             val v = game.board[index]
             tile.text = if (v == 0) "" else v.toString()
-            tile.setBackgroundColor(if (v == 0) 0xFF3A3226.toInt() else tileColor(v))
+            Ui.cell(tile, if (v == 0) Ui.SURFACE_DIM else tileColor(v), radiusDp = 10f)
             tile.setTextColor(if (v >= 8) Color.WHITE else Color.DKGRAY)
         }
         status.text = when {

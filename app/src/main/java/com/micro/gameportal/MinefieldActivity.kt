@@ -101,6 +101,7 @@ class MinefieldActivity : Activity() {
             cells.forEachIndexed { index, button ->
                 button.textSize = (cell / 4f).coerceAtMost(16f)
                 button.setPadding(0, 0, 0, 0)
+                Ui.cell(button, 0xFF8A7A5E.toInt(), radiusDp = 6f)
                 button.setOnClickListener { onCellTap(index) }
                 button.setOnLongClickListener {
                     Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_PROP_BEEP, 80)
@@ -178,13 +179,13 @@ class MinefieldActivity : Activity() {
                     val count = field.adjacentMines(index)
                     button.text = if (count == 0) "" else count.toString()
                     button.setTextColor(countColor(count))
-                    button.setBackgroundColor(0xFF5A4E3A.toInt())
+                    Ui.cell(button, 0xFF5A4E3A.toInt(), radiusDp = 6f)
                 }
-                Minefield.FLAGGED -> { button.text = "⚑"; button.setBackgroundColor(0xFF6D5C43.toInt()) }
-                Minefield.BLAST -> { button.text = "✸"; button.setBackgroundColor(Color.RED) }
+                Minefield.FLAGGED -> { button.text = "⚑"; Ui.cell(button, 0xFF6D5C43.toInt(), radiusDp = 6f) }
+                Minefield.BLAST -> { button.text = "✸"; Ui.cell(button, Color.RED, radiusDp = 6f) }
                 else -> {
                     button.text = if (field.isOver && field.mines[index]) "✸" else ""
-                    button.setBackgroundColor(0xFF8A7A5E.toInt())
+                    Ui.cell(button, 0xFF8A7A5E.toInt(), radiusDp = 6f)
                 }
             }
         }

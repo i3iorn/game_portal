@@ -89,6 +89,8 @@ class SlidingPuzzleActivity : Activity() {
             columnCount = size
             cells.forEachIndexed { index, button ->
                 button.textSize = (cell / 5f).coerceAtMost(24f)
+                button.setTextColor(Ui.TEXT)
+                Ui.cell(button, 0xFF6D5C43.toInt())
                 button.setOnClickListener { onCellTap(index) }
                 addView(
                     button,

@@ -31,7 +31,7 @@ class TicTacToeActivity : Activity() {
         super.onCreate(savedInstanceState)
         val root = Ui.gameRoot(this)
         status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
-        board = TicTacToeBoardView(this)
+        board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.SURFACE, radiusDp = 14f, ripple = false) }
         board.onCellTapped = ::onCellTapped
         Ui.addCentered(root, status)
         Ui.addCentered(root, board)

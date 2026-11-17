@@ -93,7 +93,7 @@ class LightsOutActivity : Activity() {
 
     private fun render() {
         cells.forEachIndexed { index, button ->
-            button.setBackgroundColor(if (game.lights[index]) 0xFFFFD54F.toInt() else 0xFF37301F.toInt())
+            Ui.cell(button, if (game.lights[index]) 0xFFFFD54F.toInt() else 0xFF37301F.toInt(), radiusDp = 10f)
         }
         status.text = when {
             game.isSolved -> "Solved in ${game.moves} moves!${bestScoreText()}"
