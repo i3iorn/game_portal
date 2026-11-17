@@ -48,21 +48,15 @@ class LightsOutActivity : Activity() {
         status = Ui.status(this)
         Ui.addCentered(root, status)
         cells = Array(size * size) { Button(this) }
-        val grid = GridLayout(this).apply {
+        val grid = SquareGridLayout(this).apply {
             columnCount = size
             cells.forEachIndexed { index, button ->
                 button.textSize = 0f
                 button.setOnClickListener { onCellTap(index) }
-                addView(
-                    button,
-                    GridLayout.LayoutParams().apply {
-                        width = cell; height = cell
-                        setMargins(4, 4, 4, 4)
-                    },
-                )
+                addView(button, cellParams(index / size, index % size, 4))
             }
         }
-        Ui.addCentered(root, grid)
+        root.addView(grid, SquareGridLayout.fillLayoutParams())
         Ui.addCentered(root, Ui.button(this, "New game") {
             game.newGame()
             render()

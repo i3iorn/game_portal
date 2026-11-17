@@ -95,10 +95,10 @@ class MinefieldActivity : Activity() {
         status = Ui.status(this)
         Ui.addCentered(root, status)
         cells = Array(rows * cols) { Button(this) }
-        val grid = GridLayout(this).apply {
+        val grid = SquareGridLayout(this).apply {
             columnCount = cols
             cells.forEachIndexed { index, button ->
-                button.textSize = (cell / 4f).coerceAtMost(16f)
+                button.textSize = 14f
                 button.setPadding(0, 0, 0, 0)
                 Ui.cell(button, Ui.theme(this@MinefieldActivity).primary, radiusDp = 6f)
                 button.setOnClickListener { onCellTap(index) }
@@ -106,16 +106,10 @@ class MinefieldActivity : Activity() {
                     Feedback.play(this@MinefieldActivity, Feedback.Sound.MOVE)
                     field.toggleFlag(index); render(); true
                 }
-                addView(
-                    button,
-                    GridLayout.LayoutParams().apply {
-                        width = cell; height = cell
-                        setMargins(2, 2, 2, 2)
-                    },
-                )
+                addView(button, cellParams(index / cols, index % cols, 2))
             }
         }
-        Ui.addCentered(root, grid)
+        root.addView(grid, SquareGridLayout.fillLayoutParams())
         Ui.addCentered(root, Ui.button(this, "New game") {
             field = Minefield(rows = rows, cols = cols, mineCount = presetFields(preset).third)
             elapsedBaseMs = 0L

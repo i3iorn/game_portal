@@ -35,7 +35,7 @@ class Game2048Activity : Activity() {
         grid.setOnTouchListener(SwipeListener { direction -> onSwipe(direction) })
         Ui.addCentered(root, status)
         boardGrid = grid
-        Ui.addCentered(root, grid)
+        root.addView(grid, SquareGridLayout.fillLayoutParams())
         val actions = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -69,18 +69,12 @@ class Game2048Activity : Activity() {
 
     private fun buildGrid(): GridLayout {
         tiles = Array(Game2048.CELLS) { TextView(this) }
-        return GridLayout(this).apply {
+        return SquareGridLayout(this).apply {
             columnCount = Game2048.SIZE
-            tiles.forEach { tile ->
+            tiles.forEachIndexed { index, tile ->
                 tile.textSize = 22f
                 tile.gravity = Gravity.CENTER
-                addView(
-                    tile,
-                    GridLayout.LayoutParams().apply {
-                        width = 165; height = 165
-                        setMargins(4, 4, 4, 4)
-                    },
-                )
+                addView(tile, cellParams(index / Game2048.SIZE, index % Game2048.SIZE, 4))
             }
         }
     }

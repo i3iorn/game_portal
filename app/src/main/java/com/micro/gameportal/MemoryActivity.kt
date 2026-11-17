@@ -26,23 +26,17 @@ class MemoryActivity : Activity() {
         status = Ui.status(this, "Find all pairs!")
         Ui.addCentered(root, status)
         cells = Array(game.faces.size) { Button(this) }
-        val grid = GridLayout(this).apply {
+        val grid = SquareGridLayout(this).apply {
             columnCount = 4
             cells.forEachIndexed { index, button ->
-                button.textSize = 22f
+                button.textSize = 24f
                 button.setTextColor(Ui.theme(this@MemoryActivity).text)
                 Ui.cell(button, Ui.theme(this@MemoryActivity).surfaceDim)
                 button.setOnClickListener { onCellTap(index) }
-                addView(
-                    button,
-                    GridLayout.LayoutParams().apply {
-                        width = 170; height = 170
-                        setMargins(4, 4, 4, 4)
-                    },
-                )
+                addView(button, cellParams(index / 4, index % 4, 4))
             }
         }
-        Ui.addCentered(root, grid)
+        root.addView(grid, SquareGridLayout.fillLayoutParams())
         setContentView(root)
         restoreOrStart(savedInstanceState)
         render()

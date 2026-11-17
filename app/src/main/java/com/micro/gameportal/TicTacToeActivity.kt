@@ -33,7 +33,7 @@ class TicTacToeActivity : Activity() {
         board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.theme(this@TicTacToeActivity).surface, radiusDp = 14f, ripple = false) }
         board.onCellTapped = ::onCellTapped
         Ui.addCentered(root, status)
-        Ui.addCentered(root, board)
+        root.addView(board, SquareGridLayout.fillLayoutParams())
         opponentButton = Ui.button(this, "", size = Ui.ButtonSize.WIDE) { cycleOpponent() }
         Ui.addCentered(root, opponentButton)
         Ui.addCentered(root, Ui.button(this, "New game", size = Ui.ButtonSize.WIDE) {

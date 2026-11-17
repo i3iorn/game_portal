@@ -11,6 +11,15 @@ import android.view.View
 class TicTacToeBoardView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
 
     var onCellTapped: ((Int) -> Unit)? = null
+
+    /** Render as a square using the smaller available dimension. */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val side = minOf(
+            View.MeasureSpec.getSize(widthMeasureSpec),
+            View.MeasureSpec.getSize(heightMeasureSpec),
+        )
+        setMeasuredDimension(side, side)
+    }
     var game = TicTacToeGame()
         set(value) {
             field = value
