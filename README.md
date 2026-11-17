@@ -1,11 +1,14 @@
 # Game Portal
 
-Android app with common puzzle games (currently: Tic-Tac-Toe, 15 Puzzle, Memory Match).
-Built with Kotlin, Views, and Gradle (AGP 9, Kotlin via AGP built-in Kotlin support).
+Android app with common puzzle games: Tic-Tac-Toe, 15 Puzzle, Memory Match,
+2048, Minesweeper, and Lights Out. Built with Kotlin, Views, and Gradle
+(AGP 9, Kotlin via AGP built-in Kotlin support).
 
-Tic-Tac-Toe has a built-in opponent (Easy / Medium / Hard minimax). The 15 Puzzle
-tracks moves and time with a best score; Memory Match and both other games
-survive device rotation.
+Tic-Tac-Toe has a built-in opponent (Easy / Medium / Hard minimax). The 15
+Puzzle tracks moves and time with a best score; 2048 tracks score with a best
+score; Minesweeper has flags (long-press) and a best time; Lights Out generates
+always-solvable boards with a best move count. All games survive device
+rotation.
 
 ## Build
 

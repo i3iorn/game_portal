@@ -34,6 +34,9 @@ class MainActivity : Activity() {
             GameEntry("Tic-Tac-Toe", TicTacToeActivity::class.java, ::ticTacToePreview),
             GameEntry("15 Puzzle", SlidingPuzzleActivity::class.java, ::puzzlePreview),
             GameEntry("Memory Match", MemoryActivity::class.java, ::memoryPreview),
+            GameEntry("2048", Game2048Activity::class.java, ::game2048Preview),
+            GameEntry("Minesweeper", MinefieldActivity::class.java, ::minefieldPreview),
+            GameEntry("Lights Out", LightsOutActivity::class.java, ::lightsOutPreview),
         ).forEach { root.addEntryFor(it) }
         setContentView(root)
     }
@@ -101,10 +104,47 @@ class MainActivity : Activity() {
         canvas.drawRect(s * 0.1f, s * 0.25f, s * 0.3f, s * 0.45f, card)
     }
 
+    private fun game2048Preview(): View = GamePreviewView(this) { canvas, s ->
+        val paint = Paint().apply { color = GRAY; strokeWidth = s * 0.02f; style = Paint.Style.STROKE }
+        (1..3).forEach { i ->
+            canvas.drawLine(s * 0.15f + i * s * 0.175f, s * 0.15f, s * 0.15f + i * s * 0.175f, s * 0.85f, paint)
+            canvas.drawLine(s * 0.15f, s * 0.15f + i * s * 0.175f, s * 0.85f, s * 0.15f + i * s * 0.175f, paint)
+        }
+        val tile = Paint().apply { color = ORANGE }
+        canvas.drawRect(s * 0.15f, s * 0.675f, s * 0.325f, s * 0.85f, tile)
+        val tile2 = Paint().apply { color = BLUE }
+        canvas.drawRect(s * 0.5f, s * 0.15f, s * 0.675f, s * 0.325f, tile2)
+    }
+
+    private fun minefieldPreview(): View = GamePreviewView(this) { canvas, s ->
+        val paint = Paint().apply { color = GRAY; strokeWidth = s * 0.03f; style = Paint.Style.STROKE }
+        (1..2).forEach { i ->
+            canvas.drawLine(s * 0.2f + i * s * 0.2f, s * 0.2f, s * 0.2f + i * s * 0.2f, s * 0.8f, paint)
+            canvas.drawLine(s * 0.2f, s * 0.2f + i * s * 0.2f, s * 0.8f, s * 0.2f + i * s * 0.2f, paint)
+        }
+        canvas.drawCircle(s * 0.7f, s * 0.7f, s * 0.07f, Paint().apply { color = RED })
+        canvas.drawCircle(s * 0.3f, s * 0.3f, s * 0.07f, Paint().apply { color = GREEN })
+    }
+
+    private fun lightsOutPreview(): View = GamePreviewView(this) { canvas, s ->
+        val off = Paint().apply { color = GRAY; strokeWidth = s * 0.03f; style = Paint.Style.STROKE }
+        val on = Paint().apply { color = 0xFFFFD54F.toInt() }
+        val cell = s * 0.16f
+        (0..3).forEach { r ->
+            (0..3).forEach { c ->
+                val l = s * 0.18f + c * cell * 1.1f
+                val t = s * 0.18f + r * cell * 1.1f
+                if ((r + c) % 3 == 0) canvas.drawRect(l, t, l + cell, t + cell, on)
+                else canvas.drawRect(l, t, l + cell, t + cell, off)
+            }
+        }
+    }
+
     private companion object {
         val GRAY = 0xFF5B6770.toInt()
         val BLUE = 0xFF1E88E5.toInt()
         val RED = 0xFFE53935.toInt()
         val GREEN = 0xFF43A047.toInt()
+        val ORANGE = 0xFFFB8C00.toInt()
     }
 }

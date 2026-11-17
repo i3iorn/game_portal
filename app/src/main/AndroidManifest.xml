@@ -20,5 +20,8 @@
         <activity android:name=".TicTacToeActivity" android:exported="false" />
         <activity android:name=".SlidingPuzzleActivity" android:exported="false" />
         <activity android:name=".MemoryActivity" android:exported="false" />
+        <activity android:name=".Game2048Activity" android:exported="false" />
+        <activity android:name=".MinefieldActivity" android:exported="false" />
+        <activity android:name=".LightsOutActivity" android:exported="false" />
     </application>
 </manifest>
