@@ -1,6 +1,7 @@
 package com.micro.gameportal
 
 import android.app.Activity
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -127,6 +128,7 @@ class SlidingPuzzleActivity : Activity() {
             solvedElapsedMs = elapsedMs()
             running = false
             handler.removeCallbacks(tick)
+            Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
             scores.submit(KEY_BEST_MOVES, game.moves.toLong(), lowerIsBetter = true)
             scores.submit(KEY_BEST_MS, solvedElapsedMs, lowerIsBetter = true)
         }

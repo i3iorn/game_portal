@@ -2,11 +2,13 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.graphics.Color
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.widget.GridLayout
+import android.widget.LinearLayout
 import android.widget.TextView
 
 /** 2048: swipe to slide and merge tiles. Score and best score shown live. */
@@ -22,6 +24,7 @@ class Game2048Activity : Activity() {
     private lateinit var game: Game2048
     private lateinit var tiles: Array<TextView>
     private lateinit var status: TextView
+    private lateinit var boardGrid: View
     private val scores by lazy { ScoreStore(this, "game2048") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,11 +35,20 @@ class Game2048Activity : Activity() {
         val grid = buildGrid()
         grid.setOnTouchListener(SwipeListener { direction -> onSwipe(direction) })
         Ui.addCentered(root, status)
+        boardGrid = grid
         Ui.addCentered(root, grid)
-        Ui.addCentered(root, Ui.button(this, "New game") {
+        val actions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        actions.addView(Ui.button(this, "Undo") {
+            if (game.undo()) render()
+        })
+        actions.addView(Ui.button(this, "New game") {
             game.newGame()
             render()
         })
+        Ui.addCentered(root, actions)
         setContentView(root)
         restoreOrStart(savedInstanceState)
         render()
@@ -76,6 +88,8 @@ class Game2048Activity : Activity() {
 
     private fun onSwipe(direction: Game2048.Direction) {
         if (!game.move(direction)) return
+        Feedback.haptic(boardGrid)
+        Feedback.play(this, ToneGenerator.TONE_PROP_BEEP)
         scores.submit(KEY_BEST_SCORE, game.score.toLong(), lowerIsBetter = false)
         render()
     }

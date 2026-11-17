@@ -2,6 +2,7 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.graphics.Color
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -101,7 +102,10 @@ class MinefieldActivity : Activity() {
                 button.textSize = (cell / 4f).coerceAtMost(16f)
                 button.setPadding(0, 0, 0, 0)
                 button.setOnClickListener { onCellTap(index) }
-                button.setOnLongClickListener { field.toggleFlag(index); render(); true }
+                button.setOnLongClickListener {
+                    Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_PROP_BEEP, 80)
+                    field.toggleFlag(index); render(); true
+                }
                 addView(
                     button,
                     GridLayout.LayoutParams().apply {
@@ -135,7 +139,13 @@ class MinefieldActivity : Activity() {
         if (field.planted && !running && !field.isOver) startClock()
         if (field.isOver) {
             stopClock()
-            if (!wasMine) scores.submit(bestKey(), elapsedMs(), lowerIsBetter = true)
+            if (wasMine) {
+                Feedback.haptic(cells[index])
+                Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_SUP_ERROR, 600)
+            } else {
+                Feedback.play(this@MinefieldActivity, ToneGenerator.TONE_PROP_ACK, 300)
+                scores.submit(bestKey(), elapsedMs(), lowerIsBetter = true)
+            }
         }
         render()
     }

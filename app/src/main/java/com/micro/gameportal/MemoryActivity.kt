@@ -1,6 +1,7 @@
 package com.micro.gameportal
 
 import android.app.Activity
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.widget.Button
 import android.widget.GridLayout
@@ -66,11 +67,16 @@ class MemoryActivity : Activity() {
             is MemoryGame.FlipResult.Matched -> {
                 cells[result.first].text = game.faces[result.first]
                 cells[result.second].text = game.faces[result.second]
-                if (game.isCleared) status.text = "Cleared! All pairs found."
+                Feedback.play(this, ToneGenerator.TONE_PROP_BEEP)
+                if (game.isCleared) {
+                    Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
+                    status.text = "Cleared! All pairs found."
+                }
             }
             is MemoryGame.FlipResult.Mismatched -> {
                 cells[result.first].text = game.faces[result.first]
                 cells[result.second].text = game.faces[result.second]
+                Feedback.play(this, ToneGenerator.TONE_PROP_NACK, 150)
                 cells[result.first].postDelayed({
                     game.hideMismatch(result.first, result.second)
                     render()

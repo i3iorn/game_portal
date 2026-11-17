@@ -30,6 +30,12 @@ class Game2048(seed: Long = System.nanoTime()) {
     private var random = Random(seed)
     private var winAnnounced = false
 
+    // One-step undo: snapshot taken before the most recent move.
+    private var undoBoard: IntArray? = null
+    private var undoScore = 0
+    private var undoStatus = 0
+    private var undoWinAnnounced = false
+
     init {
         spawn()
         spawn()
@@ -41,6 +47,7 @@ class Game2048(seed: Long = System.nanoTime()) {
         score = 0
         status = 0
         winAnnounced = false
+        clearUndo()
         spawn()
         spawn()
     }
@@ -51,11 +58,34 @@ class Game2048(seed: Long = System.nanoTime()) {
         score = savedScore
         status = savedStatus
         winAnnounced = savedWinAnnounced
+        clearUndo()
+    }
+
+    /** True when a one-step undo is available. */
+    fun canUndo(): Boolean = undoBoard != null
+
+    /** Reverts the last move (no tile respawn); returns true when undone. */
+    fun undo(): Boolean {
+        val snapshot = undoBoard ?: return false
+        board = snapshot.copyOf()
+        score = undoScore
+        status = undoStatus
+        winAnnounced = undoWinAnnounced
+        clearUndo()
+        return true
+    }
+
+    private fun clearUndo() {
+        undoBoard = null
     }
 
     /** Applies one move; returns true when the board changed (and a tile spawns). */
     fun move(direction: Direction): Boolean {
         if (isOver) return false
+        val snapshotBoard = board.copyOf()
+        val snapshotScore = score
+        val snapshotStatus = status
+        val snapshotWinAnnounced = winAnnounced
         var changed = false
         var gained = 0
         for (line in lines(direction)) {
@@ -65,6 +95,10 @@ class Game2048(seed: Long = System.nanoTime()) {
             result.values.forEachIndexed { i, v -> board[line[i]] = v }
         }
         if (changed) {
+            undoBoard = snapshotBoard
+            undoScore = snapshotScore
+            undoStatus = snapshotStatus
+            undoWinAnnounced = snapshotWinAnnounced
             score += gained
             spawn()
         }

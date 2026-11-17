@@ -35,6 +35,11 @@ class GameSettings(private val context: Context) {
         get() = prefs.getInt("ttt_opponent", 0)
         set(value) = prefs.edit().putInt("ttt_opponent", value).apply()
 
+    /** Global: haptic + tone feedback on game events. */
+    var feedbackEnabled: Boolean
+        get() = prefs.getBoolean("feedback_enabled", true)
+        set(value) = prefs.edit().putBoolean("feedback_enabled", value).apply()
+
     /** rows x cols x mines for the selected minesweeper preset. */
     fun minesweeperField(): Triple<Int, Int, Int> = when (minesweeperPreset) {
         1 -> Triple(10, 10, 20)

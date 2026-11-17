@@ -2,6 +2,7 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.graphics.Color
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
@@ -90,6 +91,8 @@ class TicTacToeActivity : Activity() {
     private fun onCellTapped(index: Int) {
         if (mode != TicTacToeAi.Difficulty.HUMAN && game.current == TicTacToeGame.O) return
         if (!game.play(index)) return
+        Feedback.haptic(board)
+        if (game.winner != TicTacToeGame.EMPTY) Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
         board.invalidate()
         render()
         scheduleAiMove()

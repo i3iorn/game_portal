@@ -50,6 +50,11 @@ class SettingsActivity : Activity() {
             settings.ticTacToeOpponent = (settings.ticTacToeOpponent + 1) % GameSettings.TTT_OPPONENTS.size
         })
 
+        root.addView(Ui.header(this, "GENERAL"))
+        root.addView(optionRow("Sound & vibration", if (settings.feedbackEnabled) "On" else "Off") {
+            settings.feedbackEnabled = !settings.feedbackEnabled
+        })
+
         Ui.addCentered(root, Ui.button(this, "Back") { finish() })
         return root
     }

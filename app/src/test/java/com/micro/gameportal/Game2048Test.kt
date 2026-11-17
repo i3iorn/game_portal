@@ -100,6 +100,45 @@ class Game2048Test {
     }
 
     @Test
+    fun `undo reverts the last move and score`() {
+        val g = gameWith(boardOf(intArrayOf(2, 2, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0)))
+        g.move(Game2048.Direction.LEFT)
+        assertTrue(g.canUndo())
+        assertTrue(g.undo())
+        assertFalse(g.canUndo())
+        assertTrue(boardOf(intArrayOf(2, 2, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0)).contentEquals(g.board))
+        assertEquals(0, g.score)
+    }
+
+    @Test
+    fun `undo is unavailable before any move and after newGame`() {
+        val g = gameWith(boardOf(intArrayOf(2, 2, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0)))
+        assertFalse(g.canUndo())
+        assertFalse(g.undo())
+        g.move(Game2048.Direction.LEFT)
+        assertTrue(g.canUndo())
+        g.newGame(seed = 5)
+        assertFalse(g.canUndo())
+    }
+
+    @Test
+    fun `only the last move can be undone once`() {
+        val g = gameWith(boardOf(intArrayOf(2, 2, 0, 0), intArrayOf(2, 0, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0)))
+        g.move(Game2048.Direction.LEFT)
+        g.move(Game2048.Direction.LEFT)
+        assertTrue(g.undo())
+        // after one undo, the snapshot is consumed
+        assertFalse(g.canUndo())
+    }
+
+    @Test
+    fun `no-change move does not create an undo point`() {
+        val g = gameWith(boardOf(intArrayOf(2, 4, 2, 4), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0)))
+        assertFalse(g.move(Game2048.Direction.LEFT))
+        assertFalse(g.canUndo())
+    }
+
+    @Test
     fun `restore rebuilds position`() {
         val saved = boardOf(intArrayOf(2, 4, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0), intArrayOf(0, 0, 0, 0))
         val g = Game2048(seed = 1)

@@ -1,6 +1,7 @@
 package com.micro.gameportal
 
 import android.app.Activity
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.widget.Button
 import android.widget.GridLayout
@@ -78,7 +79,10 @@ class LightsOutActivity : Activity() {
 
     private fun onCellTap(index: Int) {
         game.tap(index)
-        if (game.isSolved && game.moves > 0) scores.submit(bestKey(game.size), game.moves.toLong(), lowerIsBetter = true)
+        if (game.isSolved && game.moves > 0) {
+            Feedback.play(this, ToneGenerator.TONE_PROP_ACK, 300)
+            scores.submit(bestKey(game.size), game.moves.toLong(), lowerIsBetter = true)
+        }
         render()
     }
 
