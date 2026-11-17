@@ -15,6 +15,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".TicTacToeActivity" android:exported="false" />
         <activity android:name=".SlidingPuzzleActivity" android:exported="false" />
         <activity android:name=".MemoryActivity" android:exported="false" />
     </application>
