@@ -14,6 +14,9 @@ class ConnectFourActivity : Activity() {
     private lateinit var board: ConnectFourBoardView
     private lateinit var status: TextView
     private var hintView: TextView? = null
+    private var aiEnabled = false
+    private var pendingAi: Runnable? = null
+    private var opponentButton: com.google.android.material.button.MaterialButton? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +37,16 @@ class ConnectFourActivity : Activity() {
             onColumnTapped = ::onColumnTapped
         }
         scaffold.board.addView(board, SquareGridLayout.fillLayoutParams())
+        opponentButton = Ui.button(this, "Opponent: off", size = Ui.ButtonSize.WIDE) {
+            aiEnabled = !aiEnabled
+            opponentButton?.text = "Opponent: ${if (aiEnabled) "on" else "off"}"
+            pendingAi?.let { board.removeCallbacks(it) }
+            pendingAi = null
+            game.newGame()
+            board.game = game
+            render()
+        }
+        scaffold.controls.addView(opponentButton)
         scaffold.controls.addView(
             Ui.button(this, "New game") {
                 Autosave.clear(this, "connect4")
@@ -65,6 +78,7 @@ class ConnectFourActivity : Activity() {
     }
 
     private companion object {
+        const val AI_DELAY_MS = 400L
         const val STATE_CELLS = "cells"
         const val STATE_CURRENT = "current"
     }
@@ -111,7 +125,33 @@ class ConnectFourActivity : Activity() {
                 },
                 "Tap New game below for a rematch",
             ) { }
+        } else {
+            scheduleAiMove()
         }
+    }
+
+    /** Queues the AI's reply (YELLOW) when enabled, cancelling any pending one. */
+    private fun scheduleAiMove() {
+        pendingAi?.let { board.removeCallbacks(it) }
+        pendingAi = null
+        if (!aiEnabled || game.isOver) return
+        val runnable = Runnable {
+            pendingAi = null
+            if (!aiEnabled || game.isOver || game.current != ConnectFourGame.YELLOW) return@Runnable
+            val col = ConnectFourAi(game).bestMove()
+            if (col >= 0 && game.drop(col)) {
+                board.game = game
+                board.invalidate()
+                render()
+                if (game.isOver) {
+                    Feedback.haptic(board)
+                    GameStats.recordEnd(this, "connect4", won = false)
+                    Autosave.clear(this, "connect4")
+                }
+            }
+        }
+        pendingAi = runnable
+        board.postDelayed(runnable, AI_DELAY_MS)
     }
 
     private fun render() {

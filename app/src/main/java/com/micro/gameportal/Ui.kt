@@ -79,7 +79,9 @@ object Ui {
     }
 
     fun addCentered(root: LinearLayout, view: View) {
-        root.addView(centered(view))
+        val wrapper = centered(view)
+        (wrapper.layoutParams as? LinearLayout.LayoutParams)?.topMargin = dp(root.context, 8f)
+        root.addView(wrapper)
     }
 
     /** Fade transition for screen switches; call in onCreate and after finish. */

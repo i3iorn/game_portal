@@ -81,9 +81,32 @@ class ConnectFourGame(
         cells.indices.forEach { if (cells[it] != EMPTY) evaluateFrom(it) }
     }
 
+    /** Column that immediately wins for [player], or null. */
+    fun winningMove(player: Int): Int? {
+        for (col in 0 until cols) {
+            val row = landingRow(col)
+            if (row == -1) continue
+            val index = row * cols + col
+            val saved = cells[index]
+            cells[index] = player
+            val line = lineThrough(index, player)
+            cells[index] = saved
+            if (line != null) return col
+        }
+        return null
+    }
+
     /** Checks all lines through [index] for a CONNECT run of equal pieces. */
     private fun evaluateFrom(index: Int) {
         val player = cells[index]
+        lineThrough(index, player)?.let { line ->
+            winner = player
+            winningCells = line
+        }
+    }
+
+    /** The full CONNECT run through [index] owned by [player], or null. */
+    private fun lineThrough(index: Int, player: Int): List<Int>? {
         val row = index / cols
         val col = index % cols
         for ((dr, dc) in listOf(0 to 1, 1 to 0, 1 to 1, 1 to -1)) {
@@ -95,15 +118,12 @@ class ConnectFourGame(
                     val i = r * cols + c
                     if (cells[i] == player) {
                         line.add(i)
-                        if (line.size >= CONNECT) {
-                            winner = player
-                            winningCells = line.takeLast(CONNECT)
-                            return
-                        }
+                        if (line.size >= CONNECT) return line.takeLast(CONNECT)
                     } else line.clear()
                 }
                 r += dr; c += dc
             }
         }
+        return null
     }
 }
