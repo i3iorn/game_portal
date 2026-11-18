@@ -6,10 +6,14 @@ plugins {
 }
 
 // CI passes -PappVersionName / -PappVersionCode derived from the pushed tag.
-// Local defaults track the current release so debug installs don't downgrade
-// against a CI-built release APK (versionCode 2002 = v0.2.2).
-val appVersionName: String = (project.findProperty("appVersionName") as String?) ?: "0.2.2"
-val appVersionCode: Int = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 2002
+// Local defaults track the current release and the versionCode is derived
+// from the same version, so debug installs never downgrade against a
+// CI-built release APK.
+val appVersionName: String = (project.findProperty("appVersionName") as String?) ?: "0.3.1"
+val defaultVersionCode: Int = appVersionName.split(".").let { (major, minor, patch) ->
+    major.toInt() * 1_000_000 + minor.toInt() * 1_000 + patch.toInt()
+}
+val appVersionCode: Int = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: defaultVersionCode
 
 // Release signing from keystore/keystore.properties (gitignored); falls back to unsigned.
 val signingPropsFile = rootProject.file("keystore/keystore.properties")

@@ -93,8 +93,8 @@ object Ui {
         activity.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
-    /** Slim top row: back arrow + screen title. */
-    fun topBar(activity: Activity, title: String, onBack: () -> Unit): View {
+    /** Slim top row: back arrow + screen title (+ optional help button). */
+    fun topBar(activity: Activity, title: String, onBack: () -> Unit, onHelp: (() -> Unit)? = null): View {
         val palette = theme(activity)
         val bar = LinearLayout(activity).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -124,6 +124,24 @@ object Ui {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ),
         )
+        if (onHelp != null) {
+            bar.addView(
+                TextView(activity).apply {
+                    text = "?"
+                    textSize = 18f
+                    setTextColor(palette.text)
+                    gravity = Gravity.CENTER
+                    background = rounded(activity, palette.surfaceDim, ripple = true)
+                    layoutParams = LinearLayout.LayoutParams(dp(activity, 44f), dp(activity, 44f)).apply {
+                        marginStart = dp(activity, 8f)
+                    }
+                    setOnClickListener { onHelp() }
+                },
+                LinearLayout.LayoutParams(dp(activity, 44f), dp(activity, 44f)).apply {
+                    marginStart = dp(activity, 8f)
+                },
+            )
+        }
         return bar
     }
 

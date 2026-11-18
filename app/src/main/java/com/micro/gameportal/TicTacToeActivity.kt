@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -25,17 +26,22 @@ class TicTacToeActivity : Activity() {
 
     private var mode = TicTacToeAi.Difficulty.HUMAN
     private var pendingAi: Runnable? = null
+    private var hintView: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Ui.setupEnter(this)
         val scaffold = Ui.gameScaffold(this)
         val root = scaffold.root
-        scaffold.controls.addView(Ui.topBar(this, "Tic-Tac-Toe") { Ui.back(this) })
+        scaffold.controls.addView(Ui.topBar(this, "Tic-Tac-Toe", { Ui.back(this) }, { GameHelp.show(this, "ttt") }))
         status = Ui.status(this).apply { setTextColor(Color.DKGRAY) }
         board = TicTacToeBoardView(this).apply { background = Ui.rounded(this@TicTacToeActivity, Ui.theme(this@TicTacToeActivity).surface, radiusDp = 14f, ripple = false) }
         board.onCellTapped = ::onCellTapped
         scaffold.controls.addView(status)
+        if (!GameSettings(this).hintSeen("ttt")) {
+            hintView = Ui.hint(this, "Get three in a row before your opponent")
+            scaffold.controls.addView(hintView)
+        }
         scaffold.board.addView(board, SquareGridLayout.fillLayoutParams())
         opponentButton = Ui.button(this, "", size = Ui.ButtonSize.WIDE) { cycleOpponent() }
         Ui.addCentered(scaffold.controls, opponentButton)
@@ -114,6 +120,11 @@ class TicTacToeActivity : Activity() {
     private fun onCellTapped(index: Int) {
         if (mode != TicTacToeAi.Difficulty.HUMAN && game.current == TicTacToeGame.O) return
         if (!game.play(index)) return
+        hintView?.let {
+            GameSettings(this).markHintSeen("ttt")
+            it.visibility = View.GONE
+            hintView = null
+        }
         Feedback.haptic(board, Feedback.HapticStrength.LIGHT)
         board.invalidate()
         render()

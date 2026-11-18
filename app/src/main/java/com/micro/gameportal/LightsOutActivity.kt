@@ -2,15 +2,14 @@ package com.micro.gameportal
 
 import android.app.Activity
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
-import android.widget.GridLayout
 import android.widget.TextView
 
 /** Lights Out: tapping a light toggles it and its neighbours; turn them all off. */
 class LightsOutActivity : Activity() {
 
     private companion object {
-        const val GRID_MAX_PX = 640
         const val KEY_BEST_MOVES = "best_moves"
         const val STATE_SIZE = "size"
         const val STATE_LIGHTS = "lights"
@@ -20,11 +19,17 @@ class LightsOutActivity : Activity() {
     private lateinit var game: LightsOut
     private lateinit var cells: Array<Button>
     private lateinit var status: TextView
+    private var hintView: TextView? = null
+    private var autosaveDisabled = false
     private val scores by lazy { ScoreStore(this, "lights_out") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val size = savedSize(savedInstanceState) ?: GameSettings(this).lightsOutSize
+        Ui.setupEnter(this)
+        val autosave = Autosave.prefs(this, "lights")
+        val size = savedSize(savedInstanceState)
+            ?: if (autosave.contains("lights")) autosave.getInt("size", GameSettings(this).lightsOutSize)
+            else GameSettings(this).lightsOutSize
         game = LightsOut(size = size)
         setContentView(buildContent(size))
         restoreOrStart(savedInstanceState)
@@ -38,16 +43,39 @@ class LightsOutActivity : Activity() {
         outState.putInt(STATE_MOVES, game.moves)
     }
 
+    override fun onPause() {
+        super.onPause()
+        if (autosaveDisabled) {
+            Autosave.clear(this, "lights")
+            autosaveDisabled = false
+        } else if (!game.isSolved) {
+            Autosave.prefs(this, "lights").edit()
+                .putInt("size", game.size)
+                .putString("lights", game.lights.joinToString("") { if (it) "1" else "0" })
+                .putInt("moves", game.moves)
+                .apply()
+        }
+    }
+
     private fun savedSize(saved: Bundle?): Int? = saved?.getInt(STATE_SIZE, -1)?.takeIf { it > 0 }
 
     private fun bestKey(size: Int) = "${KEY_BEST_MOVES}_$size"
 
+    private fun nextSize(options: List<Int>, current: Int): Int =
+        options[(options.indexOf(current).coerceAtLeast(0) + 1) % options.size]
+
     private fun buildContent(size: Int): android.view.View {
-        val cell = (GRID_MAX_PX / size).coerceIn(56, 165)
         val scaffold = Ui.gameScaffold(this)
         val root = scaffold.root
+        scaffold.controls.addView(
+            Ui.topBar(this, "Lights Out", { Ui.back(this) }, { GameHelp.show(this, "lights") }),
+        )
         status = Ui.status(this)
         scaffold.controls.addView(status)
+        if (!GameSettings(this).hintSeen("lights")) {
+            hintView = Ui.hint(this, "Tap a light to toggle it and its neighbours")
+            scaffold.controls.addView(hintView)
+        }
         cells = Array(size * size) { Button(this) }
         val grid = SquareGridLayout(this).apply {
             columnCount = size
@@ -58,7 +86,16 @@ class LightsOutActivity : Activity() {
             }
         }
         scaffold.board.addView(grid, SquareGridLayout.fillLayoutParams())
+        Ui.addCentered(
+            scaffold.controls,
+            Ui.button(this, "Size: ${size}x${size}", size = Ui.ButtonSize.COMPACT, quiet = true) {
+                GameSettings(this).lightsOutSize = nextSize(GameSettings.LIGHTS_OUT_SIZES, game.size)
+                autosaveDisabled = true
+                recreate()
+            },
+        )
         Ui.addCentered(scaffold.controls, Ui.button(this, "New game") {
+            Autosave.clear(this, "lights")
             game.newGame()
             render()
         })
@@ -67,15 +104,40 @@ class LightsOutActivity : Activity() {
 
     private fun restoreOrStart(saved: Bundle?) {
         val lights = saved?.getBooleanArray(STATE_LIGHTS)
-        if (lights != null) game.restore(lights, saved.getInt(STATE_MOVES))
+        if (lights != null) {
+            game.restore(lights, saved.getInt(STATE_MOVES))
+        } else if (saved == null && Autosave.exists(this, "lights", "lights")) {
+            val autosave = Autosave.prefs(this, "lights")
+            val lights = autosave.getString("lights", "")!!.map { it == '1' }.toBooleanArray()
+            game.restore(lights, autosave.getInt("moves", 0))
+        }
         render()
     }
 
     private fun onCellTap(index: Int) {
         game.tap(index)
+        hintView?.let {
+            GameSettings(this).markHintSeen("lights")
+            it.visibility = View.GONE
+            hintView = null
+        }
         if (game.isSolved && game.moves > 0) {
+            Feedback.haptic(cells[index])
             Feedback.play(this, Feedback.Sound.SUCCESS)
             scores.submit(bestKey(game.size), game.moves.toLong(), lowerIsBetter = true)
+            GameStats.recordEnd(this, "lights", won = true)
+            Autosave.clear(this, "lights")
+            ResultOverlay.show(this, "Solved!", "${game.moves} moves") {
+                game.newGame()
+                render()
+            }
+        } else {
+            Feedback.haptic(cells[index], Feedback.HapticStrength.LIGHT)
+            Autosave.prefs(this, "lights").edit()
+                .putInt("size", game.size)
+                .putString("lights", game.lights.joinToString("") { if (it) "1" else "0" })
+                .putInt("moves", game.moves)
+                .apply()
         }
         render()
     }

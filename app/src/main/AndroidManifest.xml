@@ -24,5 +24,6 @@
         <activity android:name=".MinefieldActivity" android:exported="false" />
         <activity android:name=".LightsOutActivity" android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="false" />
+        <activity android:name=".ConnectFourActivity" android:exported="false" />
     </application>
 </manifest>

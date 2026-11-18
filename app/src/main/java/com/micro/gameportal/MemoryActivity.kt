@@ -27,7 +27,7 @@ class MemoryActivity : Activity() {
         game = MemoryGame()
         val scaffold = Ui.gameScaffold(this)
         val root = scaffold.root
-        scaffold.controls.addView(Ui.topBar(this, "Memory Match") { Ui.back(this) })
+        scaffold.controls.addView(Ui.topBar(this, "Memory Match", { Ui.back(this) }, { GameHelp.show(this, "memory") }))
         status = Ui.status(this, "Find all pairs!")
         scaffold.controls.addView(status)
         if (!GameSettings(this).hintSeen("memory")) {

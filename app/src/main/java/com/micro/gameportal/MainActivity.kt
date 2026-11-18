@@ -32,6 +32,7 @@ class MainActivity : Activity() {
             GameEntry("2048", "2048", Game2048Activity::class.java, ::game2048Preview),
             GameEntry("Minesweeper", "mines", MinefieldActivity::class.java, ::minefieldPreview),
             GameEntry("Lights Out", "lights", LightsOutActivity::class.java, ::lightsOutPreview),
+            GameEntry("Connect Four", "connect4", ConnectFourActivity::class.java, ::connectFourPreview),
         ).forEach { entry ->
             Ui.addCentered(root, buildEntryRow(entry))
         }
@@ -141,6 +142,16 @@ class MainActivity : Activity() {
                 else canvas.drawRect(l, t, l + cell, t + cell, off)
             }
         }
+    }
+
+    private fun connectFourPreview(): View = GamePreviewView(this) { canvas, s ->
+        val paint = Paint().apply { color = GRAY; strokeWidth = s * 0.03f; style = Paint.Style.STROKE }
+        (1..2).forEach { i ->
+            canvas.drawLine(s * 0.2f + i * s * 0.2f, s * 0.2f, s * 0.2f + i * s * 0.2f, s * 0.8f, paint)
+            canvas.drawLine(s * 0.2f, s * 0.2f + i * s * 0.2f, s * 0.8f, s * 0.2f + i * s * 0.2f, paint)
+        }
+        canvas.drawCircle(s * 0.3f, s * 0.7f, s * 0.07f, Paint().apply { color = RED })
+        canvas.drawCircle(s * 0.7f, s * 0.5f, s * 0.07f, Paint().apply { color = 0xFFFFD54F.toInt() })
     }
 
     private companion object {

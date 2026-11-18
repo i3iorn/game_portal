@@ -111,7 +111,7 @@ class MinefieldActivity : Activity() {
         val cell = (GRID_MAX_PX / cols).coerceIn(56, 90)
         val scaffold = Ui.gameScaffold(this)
         val root = scaffold.root
-        scaffold.controls.addView(Ui.topBar(this, "Minesweeper") { Ui.back(this) })
+        scaffold.controls.addView(Ui.topBar(this, "Minesweeper", { Ui.back(this) }, { GameHelp.show(this, "mines") }))
         status = Ui.status(this)
         scaffold.controls.addView(status)
         if (!GameSettings(this).hintSeen("mines")) {

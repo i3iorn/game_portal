@@ -36,7 +36,7 @@ class Game2048Activity : Activity() {
         game = Game2048()
         val scaffold = Ui.gameScaffold(this)
         val root = scaffold.root
-        scaffold.controls.addView(Ui.topBar(this, "2048") { Ui.back(this) })
+        scaffold.controls.addView(Ui.topBar(this, "2048", { Ui.back(this) }, { GameHelp.show(this, "2048") }))
         status = Ui.status(this)
         if (!settings.hintSeen("2048")) {
             hintView = Ui.hint(this, "Swipe to slide and merge tiles")

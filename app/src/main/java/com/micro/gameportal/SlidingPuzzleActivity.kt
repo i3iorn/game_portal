@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Button
 import android.widget.GridLayout
+import android.view.View
 import android.widget.TextView
 
 /**
@@ -34,6 +35,8 @@ class SlidingPuzzleActivity : Activity() {
     private var solvedElapsedMs = -1L
     private val handler = Handler(Looper.getMainLooper())
     private var running = false
+    private var autosaveDisabled = false
+    private var hintView: TextView? = null
     private val scores by lazy { ScoreStore(this, "sliding_puzzle") }
 
     private val tick = object : Runnable {
@@ -45,7 +48,11 @@ class SlidingPuzzleActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val size = savedSize(savedInstanceState) ?: GameSettings(this).puzzleSize
+        Ui.setupEnter(this)
+        val autosave = Autosave.prefs(this, "puzzle")
+        val size = savedSize(savedInstanceState)
+            ?: if (autosave.contains("board")) autosave.getInt("size", GameSettings(this).puzzleSize)
+            else GameSettings(this).puzzleSize
         game = SlidingPuzzleGame(size = size)
         setContentView(buildContent(size))
         restoreOrStart(savedInstanceState)
@@ -74,6 +81,17 @@ class SlidingPuzzleActivity : Activity() {
         elapsedBaseMs = elapsedMs()
         running = false
         handler.removeCallbacks(tick)
+        if (autosaveDisabled) {
+            Autosave.clear(this, "puzzle")
+            autosaveDisabled = false
+        } else if (!game.isSolved) {
+            Autosave.prefs(this, "puzzle").edit()
+                .putInt("size", game.size)
+                .putString("board", game.board.joinToString(","))
+                .putInt("moves", game.moves)
+                .putLong("elapsed", elapsedBaseMs)
+                .apply()
+        }
     }
 
     private fun savedSize(saved: Bundle?): Int? = saved?.getInt(STATE_SIZE, -1)?.takeIf { it > 0 }
@@ -82,8 +100,13 @@ class SlidingPuzzleActivity : Activity() {
         val cell = (GRID_MAX_PX / size).coerceAtLeast(56)
         val scaffold = Ui.gameScaffold(this)
         val root = scaffold.root
+        scaffold.controls.addView(Ui.topBar(this, "15 Puzzle", { Ui.back(this) }, { GameHelp.show(this, "puzzle") }))
         status = Ui.status(this)
         scaffold.controls.addView(status)
+        if (!GameSettings(this).hintSeen("puzzle")) {
+            hintView = Ui.hint(this, "Slide the tiles into order")
+            scaffold.controls.addView(hintView)
+        }
         cells = Array(size * size) { Button(this) }
         val grid = SquareGridLayout(this).apply {
             columnCount = size
@@ -96,7 +119,16 @@ class SlidingPuzzleActivity : Activity() {
             }
         }
         scaffold.board.addView(grid, SquareGridLayout.fillLayoutParams())
+        Ui.addCentered(
+            scaffold.controls,
+            Ui.button(this, "Board: ${size}x${size}", size = Ui.ButtonSize.COMPACT, quiet = true) {
+                GameSettings(this).puzzleSize = nextSize(GameSettings.PUZZLE_SIZES, game.size)
+                autosaveDisabled = true
+                recreate()
+            },
+        )
         Ui.addCentered(scaffold.controls, Ui.button(this, "New game") {
+            Autosave.clear(this, "puzzle")
             game.newGame()
             elapsedBaseMs = 0L
             solvedElapsedMs = -1L
@@ -115,21 +147,52 @@ class SlidingPuzzleActivity : Activity() {
             game.restore(board, saved.getInt(STATE_MOVES))
             elapsedBaseMs = saved.getLong(STATE_ELAPSED)
             solvedElapsedMs = -1L
+        } else if (board == null && Autosave.exists(this, "puzzle", "board")) {
+            val autosave = Autosave.prefs(this, "puzzle")
+            game.restore(
+                autosave.getString("board", "")!!.split(",").map { it.toInt() }.toIntArray(),
+                autosave.getInt("moves", 0),
+            )
+            elapsedBaseMs = autosave.getLong("elapsed", 0L)
+            solvedElapsedMs = -1L
         }
         render()
     }
 
     private fun onCellTap(index: Int) {
-        if (game.tap(index) && game.isSolved) {
+        if (game.tap(index)) {
+            hintView?.let {
+                GameSettings(this).markHintSeen("puzzle")
+                it.visibility = View.GONE
+                hintView = null
+            }
+            Feedback.haptic(cells[index], Feedback.HapticStrength.LIGHT)
+        }
+        if (game.isSolved && solvedElapsedMs < 0) {
             solvedElapsedMs = elapsedMs()
             running = false
             handler.removeCallbacks(tick)
             Feedback.play(this, Feedback.Sound.SUCCESS)
             scores.submit(KEY_BEST_MOVES, game.moves.toLong(), lowerIsBetter = true)
             scores.submit(KEY_BEST_MS, solvedElapsedMs, lowerIsBetter = true)
+            GameStats.recordEnd(this, "puzzle", won = true)
+            Autosave.clear(this, "puzzle")
+            ResultOverlay.show(this, "Solved!", "${game.moves} moves in ${solvedElapsedMs / 1000}s") {
+                game.newGame()
+                elapsedBaseMs = 0L
+                solvedElapsedMs = -1L
+                startedAtMs = System.currentTimeMillis()
+                running = true
+                handler.removeCallbacks(tick)
+                handler.postDelayed(tick, TICK_MS)
+                render()
+            }
         }
         render()
     }
+
+    private fun nextSize(options: List<Int>, current: Int): Int =
+        options[(options.indexOf(current).coerceAtLeast(0) + 1) % options.size]
 
     private fun elapsedMs(): Long = when {
         solvedElapsedMs >= 0 -> solvedElapsedMs
