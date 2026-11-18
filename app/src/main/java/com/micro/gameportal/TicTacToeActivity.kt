@@ -47,6 +47,27 @@ class TicTacToeActivity : Activity() {
         })
         setContentView(root)
         restoreOrStart(savedInstanceState)
+        if (savedInstanceState == null && Autosave.exists(this, "ttt", "cells")) {
+            val autosave = Autosave.prefs(this, "ttt")
+            val cells = autosave.getString("cells", "")!!.split(",").map { it.toInt() }.toIntArray()
+            game.restore(cells, autosave.getInt("current", TicTacToeGame.X))
+            board.game = game
+            render()
+            scheduleAiMove()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (game.winner != TicTacToeGame.EMPTY || game.isFull) {
+            Autosave.clear(this, "ttt")
+        } else {
+            Autosave.prefs(this, "ttt").edit()
+                .putString("cells", game.cells.joinToString(","))
+                .putInt("current", game.current)
+                .putInt("mode", mode.ordinal)
+                .apply()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

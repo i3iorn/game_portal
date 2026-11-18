@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
@@ -15,6 +16,7 @@ class MainActivity : Activity() {
 
     private data class GameEntry(
         val title: String,
+        val key: String,
         val target: Class<out Activity>,
         val preview: () -> View,
     )
@@ -24,12 +26,12 @@ class MainActivity : Activity() {
         val root = Ui.gameRoot(this)
         root.addView(Ui.title(this, "Game Portal"))
         listOf(
-            GameEntry("Tic-Tac-Toe", TicTacToeActivity::class.java, ::ticTacToePreview),
-            GameEntry("15 Puzzle", SlidingPuzzleActivity::class.java, ::puzzlePreview),
-            GameEntry("Memory Match", MemoryActivity::class.java, ::memoryPreview),
-            GameEntry("2048", Game2048Activity::class.java, ::game2048Preview),
-            GameEntry("Minesweeper", MinefieldActivity::class.java, ::minefieldPreview),
-            GameEntry("Lights Out", LightsOutActivity::class.java, ::lightsOutPreview),
+            GameEntry("Tic-Tac-Toe", "ttt", TicTacToeActivity::class.java, ::ticTacToePreview),
+            GameEntry("15 Puzzle", "puzzle", SlidingPuzzleActivity::class.java, ::puzzlePreview),
+            GameEntry("Memory Match", "memory", MemoryActivity::class.java, ::memoryPreview),
+            GameEntry("2048", "2048", Game2048Activity::class.java, ::game2048Preview),
+            GameEntry("Minesweeper", "mines", MinefieldActivity::class.java, ::minefieldPreview),
+            GameEntry("Lights Out", "lights", LightsOutActivity::class.java, ::lightsOutPreview),
         ).forEach { entry ->
             Ui.addCentered(root, buildEntryRow(entry))
         }
@@ -45,7 +47,22 @@ class MainActivity : Activity() {
             gravity = android.view.Gravity.CENTER_VERTICAL
         }
         row.addView(entry.preview(), 160, 160)
-        row.addView(Ui.button(this, entry.title) { startActivity(Intent(this@MainActivity, entry.target)) })
+        val column = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        column.addView(Ui.button(this, entry.title) { startActivity(Intent(this@MainActivity, entry.target)) })
+        GameStats.summary(this, entry.key)?.let { summary ->
+            column.addView(
+                TextView(this).apply {
+                    text = summary
+                    textSize = 11f
+                    setTextColor(Ui.theme(this@MainActivity).textDim)
+                    setPadding(Ui.dp(this@MainActivity, 12f), 0, 0, 0)
+                },
+            )
+        }
+        row.addView(column)
         row.setPadding(0, 0, 0, 0)
         return Ui.card(this, row)
     }

@@ -57,10 +57,6 @@ class SettingsActivity : ComponentActivity() {
 @Composable
 private fun SettingsContent(settings: GameSettings, onFinish: () -> Unit) {
     var colorTheme by remember { mutableIntStateOf(settings.colorTheme) }
-    var puzzleSize by remember { mutableIntStateOf(settings.puzzleSize) }
-    var minesweeperPreset by remember { mutableIntStateOf(settings.minesweeperPreset) }
-    var lightsOutSize by remember { mutableIntStateOf(settings.lightsOutSize) }
-    var opponent by remember { mutableIntStateOf(settings.ticTacToeOpponent) }
     var feedback by remember { mutableStateOf(settings.feedbackEnabled) }
 
     val palette = Palette.byIndex(colorTheme)
@@ -79,30 +75,8 @@ private fun SettingsContent(settings: GameSettings, onFinish: () -> Unit) {
             modifier = Modifier.padding(vertical = 16.dp),
         )
 
-        SectionHeader("15 PUZZLE", palette.textDim)
-        OptionRow("Board size", "${puzzleSize}x${puzzleSize}", palette) {
-            puzzleSize = settings.let { nextSize(GameSettings.PUZZLE_SIZES, puzzleSize) }
-            settings.puzzleSize = puzzleSize
-        }
-
-        SectionHeader("MINESWEEPER", palette.textDim)
-        OptionRow("Field", GameSettings.MINESWEEPER_PRESETS[minesweeperPreset], palette) {
-            minesweeperPreset = (minesweeperPreset + 1) % GameSettings.MINESWEEPER_PRESETS.size
-            settings.minesweeperPreset = minesweeperPreset
-        }
-
-        SectionHeader("LIGHTS OUT", palette.textDim)
-        OptionRow("Board size", "${lightsOutSize}x${lightsOutSize}", palette) {
-            lightsOutSize = settings.let { nextSize(GameSettings.LIGHTS_OUT_SIZES, lightsOutSize) }
-            settings.lightsOutSize = lightsOutSize
-        }
-
-        SectionHeader("TIC-TAC-TOE", palette.textDim)
-        OptionRow("Default opponent", GameSettings.TTT_OPPONENTS[opponent], palette) {
-            opponent = (opponent + 1) % GameSettings.TTT_OPPONENTS.size
-            settings.ticTacToeOpponent = opponent
-        }
-
+        // Game-specific options live inside each game screen; only global
+        // options belong here.
         SectionHeader("GENERAL", palette.textDim)
         OptionRow("Color theme", Palette.byIndex(colorTheme).name, palette) {
             colorTheme = (colorTheme + 1) % Palette.PRESETS.size

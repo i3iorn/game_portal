@@ -58,13 +58,33 @@ class Game2048Activity : Activity() {
             ResultOverlay.dismiss()
             winShown = false
             previousBoard = null
+            Autosave.clear(this, "2048")
             game.newGame()
             render()
         })
         Ui.addCentered(scaffold.controls, actions)
         setContentView(root)
         restoreOrStart(savedInstanceState)
+        if (savedInstanceState == null && Autosave.exists(this, "2048", "board")) {
+            val autosave = Autosave.prefs(this, "2048")
+            val board = autosave.getString("board", "")!!.split(",").map { it.toInt() }.toIntArray()
+            game.restore(board, autosave.getInt("score", 0), autosave.getInt("status", 0), board.any { it >= Game2048.WIN_TILE })
+            winShown = game.status == Game2048.WIN
+        }
         render()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (game.isOver) {
+            Autosave.clear(this, "2048")
+        } else {
+            Autosave.prefs(this, "2048").edit()
+                .putString("board", game.board.joinToString(","))
+                .putInt("score", game.score)
+                .putInt("status", game.status)
+                .apply()
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -122,6 +142,7 @@ class Game2048Activity : Activity() {
         when {
             game.status == Game2048.LOST -> {
                 GameStats.recordEnd(this, "2048", won = false)
+                Autosave.clear(this, "2048")
                 ResultOverlay.show(this, "No moves left", "Score ${game.score} · best ${bestScore()}") {
                     ResultOverlay.dismiss()
                     winShown = false
